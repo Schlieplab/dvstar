@@ -74,6 +74,9 @@ int main(int argc, char *argv[]) {
     return vlmc::reprune_vlmc(arguments.in_path, arguments.out_path,
                               arguments.in_or_out_of_core, arguments.threshold,
                               arguments.pseudo_count_amount);
+  } else if (arguments.mode == vlmc::Mode::size) {
+      auto [terminal_size, sequence_size] = vlmc::terminal_node_sum(arguments.in_path);
+      std::cout << "Terminal node sum: " << terminal_size << ", Sequence size: " << sequence_size << std::endl;
   }
 
   //if (!tmp_path_existed_before) {

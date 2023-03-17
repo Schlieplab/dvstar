@@ -21,7 +21,8 @@ enum Mode {
   bic,
   build_from_kmc_db,
   dissimilarity,
-  reprune
+  reprune,
+  size
 };
 
 enum Dissimilarity {
@@ -55,6 +56,7 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
       {"bic", Mode::bic},
       {"build-from-kmc-db", Mode::build_from_kmc_db},
       {"dissimilarity", Mode::dissimilarity},
+      {"size", Mode::size},
       {"reprune", Mode::reprune}};
 
   std::map<std::string, Dissimilarity> dissimilarity_map{

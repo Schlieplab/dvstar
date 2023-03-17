@@ -50,6 +50,34 @@ count_terminal_nodes(const std::filesystem::path &tree_path) {
   return {n_terminal, sequence_size};
 }
 
+
+std::tuple<uint64, uint64>
+terminal_node_sum(const std::filesystem::path &tree_path) {
+  uint64 terminal_sum = 0;
+  uint64 sequence_size = 0;
+  std::ifstream file_stream(tree_path, std::ios::binary);
+  {
+    cereal::BinaryInputArchive iarchive(file_stream);
+
+    VLMCKmer kmer{};
+    while (file_stream.peek() != EOF) {
+      iarchive(kmer);
+
+      if (kmer.is_terminal) {
+        terminal_sum += kmer.length;
+      }
+
+      if (kmer.length == 1) {
+        sequence_size += kmer.count;
+      }
+    }
+  }
+
+  file_stream.close();
+
+  return {terminal_sum, sequence_size};
+}
+
 std::tuple<int, int, double> find_best_parameters_bic(
     const std::filesystem::path &fasta_path, const int max_max_depth,
     const int min_min_count, const std::filesystem::path &tree_path,
