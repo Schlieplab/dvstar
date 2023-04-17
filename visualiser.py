@@ -1,8 +1,11 @@
+#!/usr/bin/python
+
 import logging
 import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+import numpy as np
 
 try:
     import plotly.express as px
@@ -90,9 +93,10 @@ def sunburst(
 
     parents = [node.name[1:] for node in nodes]
     characters = [node.name[0] if len(node) > 0 else "" for node in nodes]
+    node_dict = {node.name: node.count for node in nodes}
+
     values = [
-        node.count / count_sum
-        for node in nodes
+        np.maximum(node.count - sum(node_dict.get(c + node.name, 0) for c in "ACGT"), 0) for node in nodes
     ]
 
     data = dict(
@@ -108,7 +112,7 @@ def sunburst(
         parents="parent",
         values="value",
         color="character",
-        branchvalues="total",
+        branchvalues="remainder",
         color_discrete_map={'A': "#f0f9e8", 'C': "#bae4bc", 'G': "#7bccc4", 'T': "#2b8cbe"},
         maxdepth=-1,
     )
@@ -122,6 +126,7 @@ def sunburst(
     out_dir = Path("images")
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / path.stem
+    fig.write_html(str(out_path) + ".html")
     fig.write_image(str(out_path) + ".png")
     fig.write_image(str(out_path) + ".pdf")
 
