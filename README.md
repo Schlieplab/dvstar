@@ -93,7 +93,7 @@ To view the contents of the VLMC, run:
 To compute the dvstar similarity between two VLMCs:
 
 ```shell
-./dvstar --mode dvstar --in-path NC_022098.1.bintree --to-path NC_022098.1.bintree
+./dvstar --mode dissimilarity --dissimilarity dvstar --in-path NC_022098.1.bintree --to-path NC_022098.1.bintree
 ```
 
 To build a VLMC directly from a KMC db, ensure that the kmc parameters `-ci1` and `-cs4294967295`(or other large number)
