@@ -111,6 +111,16 @@ the result of two kmc dbs would be:
 ./kmc_tools simple kmc_db1 kmc_db2 union new_db_path -ocsum
 ```
 
+## Comments on parameter selection
+
+There are three parameters to take into account, "threshold", "max-depth", and "min-count" when building VLMCs with this method.
+
+Roughly, increasing the "threshold" gives a more general VLMC (and vice versa). When performing parameter selection using the BIC or similar methods, we've seen that the "threshold" parameter increases with sequence length, such that more pruning is better with longer genomes. However, this also leads to quite general models, which are not suitable for all applications. In practice, we've had success with either a threshold of 3.9075, 1.2, or 0.1.
+
+We've had some success with building neighbor-joining trees based on the VLMCs and the dvstar dissimilarity with a "max-depth" of 9 and "min-count" of 10, but I would probably tune these parameters depending on how sensitive the VLMCs need to be. Increasing "max-depth" and decreasing "min-count" gives a more specific VLMC.
+
+Note also the "pseudo-count-amount" parameter, which by default adds 1 to each next-symbol count (present or not). In deep branches, this can introduce more noise than might be preferable, and thus, setting the "pseudo-count-amount" to 0.01 might give better results.
+
 ## Visualisation
 
 To produce a graphical representation of the VLMCs, see the [`visualiser.py`](visualiser.py) script.
