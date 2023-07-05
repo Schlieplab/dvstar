@@ -13,3 +13,9 @@
 [submodule "robin-hood-hashing"]
 	path = submodules/robin-hood-hashing
 	url = https://github.com/martinus/robin-hood-hashing.git
+[submodule "submodules/unordered_dense"]
+	path = submodules/unordered_dense
+	url = https://github.com/martinus/unordered_dense.git
+[submodule "submodules/eigen"]
+	path = submodules/eigen
+	url = git@gitlab.com:libeigen/eigen.git
