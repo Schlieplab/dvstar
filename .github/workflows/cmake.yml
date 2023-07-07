@@ -42,5 +42,5 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: upload build_vlmc artifact
-        path:  ${{github.workspace}}/build/build_vlmc
+        path:  ${{github.workspace}}/build/dvstar
       
