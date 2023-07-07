@@ -158,7 +158,7 @@ struct VLMCKmer {
       // GCC instruction, counts leading zeros.
       int32 n_leading_zeros = __builtin_clzll(diff);
 
-      if (n_leading_zeros != 63) {
+      if (diff != 0 && n_leading_zeros != 63) {
         int32 diff_pos = n_leading_zeros / 2;
         int32 final_diff_pos = diff_pos + offset;
 
