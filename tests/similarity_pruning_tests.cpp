@@ -15,8 +15,6 @@ protected:
   void SetUp() override {}
 
   KMersPerLevel<PstKmer> kmers_per_level{4, 8};
-
-  estimator_f keep_node = kl_estimator(3.9075);
 };
 
 TEST_F(SimilarityPruningTests, KullbackLiebler) {
@@ -50,6 +48,7 @@ TEST_F(SimilarityPruningTests, SimilarityPruneSameLevel) {
   std::ofstream file_stream("test_tmp.bin", std::ios::binary);
   cereal::BinaryOutputArchive oarchive(file_stream);
 
+  estimator_f keep_node = kl_estimator(3.9075);
   similarity_prune(prev_kmer, kmer, kmers_per_level, oarchive, keep_node);
 
   ASSERT_TRUE(kmers_per_level[6][3].real_child);
@@ -82,12 +81,14 @@ TEST_F(SimilarityPruningTests, SimilarityPruneParent) {
   kmers_per_level[6][2] = {g_kmer, false, true};
   kmers_per_level[6][3] = {t_kmer, true, true};
 
+  std::filesystem::path tmp_path{"test_tmp.bintree"};
   std::stringstream out;
 
   {
-    std::ofstream file_stream("test_tmp.bin", std::ios::binary);
+    std::ofstream file_stream(tmp_path, std::ios::binary);
     cereal::BinaryOutputArchive oarchive(file_stream);
 
+    estimator_f keep_node = kl_estimator(3.9075);
     auto [has_children, is_terminal] =
         process_parent(kmer, kmers_per_level, oarchive, keep_node);
 
@@ -101,7 +102,7 @@ TEST_F(SimilarityPruningTests, SimilarityPruneParent) {
 
   {
 
-    std::ifstream file_stream("test_tmp.bin", std::ios::binary);
+    std::ifstream file_stream(tmp_path, std::ios::binary);
     cereal::BinaryInputArchive iarchive(file_stream);
 
     VLMCKmer kmer{};
