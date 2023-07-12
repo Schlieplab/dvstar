@@ -3,7 +3,8 @@
 #include "vlmc_from_kmers/dvstar.hpp"
 
 int main(int argc, char *argv[]) {
-  CLI::App app{"Construction and comparisons of variable-length Markov chains with the aid of "
+  CLI::App app{"Construction and comparisons of variable-length Markov chains "
+               "with the aid of "
                "a k-mer counter."};
 
   vlmc::cli_arguments arguments{};
@@ -62,11 +63,13 @@ int main(int argc, char *argv[]) {
   } else if (arguments.mode == vlmc::Mode::dissimilarity) {
     double dissimilarity;
     if (arguments.dissimilarity == vlmc::Dissimilarity::dvstar_dissimliarity) {
-      dissimilarity = vlmc::dvstar(arguments.in_path, arguments.to_path, 0);
+      dissimilarity = vlmc::dvstar(arguments.in_path, arguments.to_path, 0,
+                                   arguments.pseudo_count_amount);
     } else if (arguments.dissimilarity ==
                vlmc::Dissimilarity::penalized_dvstar_dissimliarity) {
-      dissimilarity = vlmc::dvstar_missing_penalized(arguments.in_path,
-                                                     arguments.to_path, 0);
+      dissimilarity =
+          vlmc::dvstar_missing_penalized(arguments.in_path, arguments.to_path,
+                                         0, arguments.pseudo_count_amount);
     }
     std::cout << dissimilarity << std::endl;
 
@@ -75,8 +78,10 @@ int main(int argc, char *argv[]) {
                               arguments.in_or_out_of_core, arguments.threshold,
                               arguments.pseudo_count_amount);
   } else if (arguments.mode == vlmc::Mode::size) {
-      auto [terminal_size, sequence_size] = vlmc::terminal_node_sum(arguments.in_path);
-      std::cout << "Terminal node sum: " << terminal_size << ", Sequence size: " << sequence_size << std::endl;
+    auto [terminal_size, sequence_size] =
+        vlmc::terminal_node_sum(arguments.in_path);
+    std::cout << "Terminal node sum: " << terminal_size
+              << ", Sequence size: " << sequence_size << std::endl;
   }
 
   //if (!tmp_path_existed_before) {
