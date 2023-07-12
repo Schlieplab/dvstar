@@ -14,13 +14,14 @@ namespace vlmc::details {
 
 std::array<std::array<double, 4>, 2>
 get_components(const VLMCKmer &left, const VLMCKmer &left_background,
-               const VLMCKmer &right, const VLMCKmer &right_background) {
-  auto left_probs = get_next_symbol_probabilities(left, 1);
+               const VLMCKmer &right, const VLMCKmer &right_background,
+               const double &pseudo_count_amount) {
+  auto left_probs = get_next_symbol_probabilities(left, pseudo_count_amount);
   auto left_probs_background =
-      get_next_symbol_probabilities(left_background, 1);
-  auto right_probs = get_next_symbol_probabilities(right, 1);
+      get_next_symbol_probabilities(left_background, pseudo_count_amount);
+  auto right_probs = get_next_symbol_probabilities(right, pseudo_count_amount);
   auto right_probs_background =
-      get_next_symbol_probabilities(right_background, 1);
+      get_next_symbol_probabilities(right_background, pseudo_count_amount);
 
   return {std::array<double, 4>{
               left_probs[0] / std::sqrt(left_probs_background[0]),
@@ -269,7 +270,8 @@ void iterate_shared_kmers(
  * @return the dvstar dissimilarity between the two VLMCs
  */
 double dvstar(std::vector<VLMCKmer> &left_kmers,
-              std::vector<VLMCKmer> &right_kmers, int background_order = 0) {
+              std::vector<VLMCKmer> &right_kmers, int background_order = 0,
+              const double &pseudo_count_amount = 1) {
   double dot_product = 0.0;
   double left_norm = 0.0;
   double right_norm = 0.0;
@@ -288,8 +290,9 @@ double dvstar(std::vector<VLMCKmer> &left_kmers,
         auto &right_kmer_background = details::find_background(
             right_kmers, right_kmer, right_background_i, background_order);
 
-        auto [left_comp, right_comp] = details::get_components(
-            left_kmer, left_kmer_background, right_kmer, right_kmer_background);
+        auto [left_comp, right_comp] =
+            details::get_components(left_kmer, left_kmer_background, right_kmer,
+                                    right_kmer_background, pseudo_count_amount);
 
         for (int i = 0; i < 4; i++) {
           dot_product += left_comp[i] * right_comp[i];
@@ -316,7 +319,7 @@ dvstar(const std::filesystem::path &left_path,
        const std::filesystem::path &right_path,
        const std::function<void(const VLMCKmer &left, const VLMCKmer &right)>
            &f_not_shared,
-       int background_order = 0) {
+       int background_order = 0, const double &pseudo_count_amount = 1) {
   std::ifstream left_fs_background(left_path, std::ios::binary);
   std::ifstream right_fs_background(right_path, std::ios::binary);
 
@@ -355,9 +358,9 @@ dvstar(const std::filesystem::path &left_path,
                                    right_archive_background, right_kmer,
                                    right_kmer_background, background_order);
 
-          auto [left_comp, right_comp] =
-              details::get_components(left_kmer, left_kmer_background,
-                                      right_kmer, right_kmer_background);
+          auto [left_comp, right_comp] = details::get_components(
+              left_kmer, left_kmer_background, right_kmer,
+              right_kmer_background, pseudo_count_amount);
 
           for (int i = 0; i < 4; i++) {
             dot_product += left_comp[i] * right_comp[i];
@@ -385,10 +388,11 @@ dvstar(const std::filesystem::path &left_path,
  * @return the dvstar dissimilarity between the two VLMCs
  */
 double dvstar(const std::filesystem::path &left_path,
-              const std::filesystem::path &right_path,
-              int background_order = 0) {
+              const std::filesystem::path &right_path, int background_order = 0,
+              const double &pseudo_count_amount = 1) {
   auto [diss, _n_shared] = dvstar(
-      left_path, right_path, [](auto l, auto r) {}, background_order);
+      left_path, right_path, [](auto l, auto r) {}, background_order,
+      pseudo_count_amount);
   return diss;
 }
 
@@ -405,7 +409,8 @@ double dvstar(const std::filesystem::path &left_path,
  */
 double dvstar_missing_penalized(const std::filesystem::path &left_path,
                                 const std::filesystem::path &right_path,
-                                int background_order = 0) {
+                                int background_order = 0,
+                                const double &pseudo_count_amount = 1) {
   double missing_contexts = 0;
   double total_contexts = 0;
   auto [dvstar_dist, n_shared] = dvstar(
@@ -414,7 +419,7 @@ double dvstar_missing_penalized(const std::filesystem::path &left_path,
         missing_contexts++;
         total_contexts++;
       },
-      background_order);
+      background_order, pseudo_count_amount);
 
   double missing_frac = missing_contexts / (total_contexts + n_shared);
   // Ensure the scale is from 0-1 with equal weight on missing as dvstar.
