@@ -17,6 +17,8 @@ out_t normalise_dvstar(out_t dot_product, out_t left_norm, out_t right_norm) {
   right_norm = std::sqrt(right_norm);
   if (left_norm == 0 || right_norm == 0) {
     return 1.0;
+  } else if (left_norm == right_norm) {
+    return 0.0;
   } else {
     out_t Dvstar = dot_product / (left_norm * right_norm);
 
