@@ -11,7 +11,6 @@
 #include "vlmc_container.hpp"
 
 namespace vlmc::calc_dist {
-using kmer_pair = vlmc::container::KmerPair;
 
 template <typename VC>
 void calculate_triangle_slice(
@@ -76,6 +75,7 @@ matrix_t calculate_distances(vlmc::container::ClusterContainer<VC> &cluster,
   };
 
   parallel::parallelize_triangle(cluster.size(), fun, requested_cores);
+
   return distances;
 }
 

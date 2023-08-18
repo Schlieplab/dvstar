@@ -19,3 +19,6 @@
 [submodule "submodules/eigen"]
 	path = submodules/eigen
 	url = git@gitlab.com:libeigen/eigen.git
+[submodule "submodules/HighFive"]
+	path = submodules/HighFive
+	url = https://github.com/BlueBrain/HighFive.git

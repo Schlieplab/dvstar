@@ -26,22 +26,26 @@ get_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
     paths_size = set_size;
   }
 
-  if (nr_cores_to_use > paths_size)
+  if (nr_cores_to_use > paths_size) {
     nr_cores_to_use = paths_size;
-  if (nr_cores_to_use > 4)
+  }
+  if (nr_cores_to_use > 4) {
     nr_cores_to_use = 4;
+  }
 
   container::ClusterContainer<VC> cluster{paths_size};
+  std::vector<std::string> ids{paths_size};
 
   auto fun = [&](size_t start_index, size_t stop_index) {
     for (int index = start_index; index < stop_index; index++) {
       cluster[index] = VC(paths[index], background_order);
+      ids[index] = paths[index].stem();
     }
   };
 
   parallel::parallelize(paths_size, fun, nr_cores_to_use);
 
-  return cluster;
+  return {cluster, ids};
 }
 
 std::vector<container::KmerCluster>
@@ -91,4 +95,4 @@ get_kmer_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
 
   return clusters;
 }
-} // namespace vlmc::get_cluster
+} // namespace vlmc

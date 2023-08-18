@@ -25,6 +25,16 @@ enum Mode {
   size
 };
 
+enum VLMCRepresentation {
+  vlmc_sorted_search,
+  vlmc_sorted_vector,
+  vlmc_b_tree,
+  vlmc_ey,
+  vlmc_hashmap,
+  vlmc_kmer_major,
+  vlmc_veb
+};
+
 enum Dissimilarity {
   dvstar_dissimliarity,
   penalized_dvstar_dissimliarity,
@@ -41,13 +51,23 @@ struct cli_arguments {
   std::filesystem::path to_path;
   std::filesystem::path tmp_path{"./tmp"};
   std::filesystem::path out_path{};
+
+  size_t degree_of_parallelism{1};
+  VLMCRepresentation vlmc_representation{
+      VLMCRepresentation::vlmc_sorted_search};
+
   int min_count = 2;
   int max_depth = 9;
   double threshold = 3.9075;
+
   double pseudo_count_amount = 1.0;
+  int background_order = 0;
+
   Core in_or_out_of_core{Core::in};
+
   SequencingParameters sequencing_parameters{false};
 };
+
 void add_options(CLI::App &app, cli_arguments &arguments) {
   std::map<std::string, Mode> mode_map{
       {"build", Mode::build},
@@ -97,19 +117,20 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
 
   app.add_option(
       "--in-path", arguments.in_path,
-      "Path to saved tree file or kmc db file.  Required for "
+      "Path to saved tree file(s) or kmc db file.  Required for "
       "'build-from-kmc-db', 'dump', 'score', and 'dissimilarity' modes.  For "
       "'build-from-kmc-db', the kmc db file needs to be supplied "
       "without the file extension.");
 
   app.add_option(
       "--to-path", arguments.to_path,
-      "Path to saved tree file.  Required for 'dissimilarity' mode.");
+      "Path to saved tree file(s).  Required for 'dissimilarity' mode.");
 
   app.add_option("-o,--out-path", arguments.out_path,
                  "Path to output file.  The VLMCs are stored as binary, and "
                  "can be read by the 'dump' or 'score' modes.  Required for "
-                 "'build' and 'dump' modes.");
+                 "'build' and 'dump' modes. If supplied for 'dissimilarity' "
+                 "mode, will save result in a hdf5 file at the path.");
 
   app.add_option("-t,--temp-path", arguments.tmp_path,
                  "Path to temporary folder for the external memory algorithms. "
@@ -150,6 +171,35 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
                  "If --adjust-for-sequencing-errors is given, this parameter "
                  "is used to alter to estimate the number of k-mers that will "
                  "be missing due to sequencing errors.");
+}
+
+size_t parse_degree_of_parallelism(size_t requested_cores) {
+  if (requested_cores < 1) {
+    throw std::invalid_argument("Too low degree of parallelism, must be >= 1");
+  } else {
+    return requested_cores;
+  }
+}
+
+void add_distance_options(CLI::App &app, cli_arguments &arguments) {
+  std::map<std::string, VLMCRepresentation> VLMC_rep_map{
+      {"sbs", VLMCRepresentation::vlmc_sorted_search},
+      {"sorted-vector", VLMCRepresentation::vlmc_sorted_vector},
+      {"b-tree", VLMCRepresentation::vlmc_b_tree},
+      {"eytzinger", VLMCRepresentation::vlmc_ey},
+      {"HashMap", VLMCRepresentation::vlmc_hashmap},
+      {"kmer-major", VLMCRepresentation::vlmc_kmer_major},
+      {"veb", VLMCRepresentation::vlmc_veb}};
+
+  app.add_option("-n,--max-dop", arguments.degree_of_parallelism,
+                 "Degree of parallelism. Default 1 (sequential).");
+
+  app.add_option("-v,--vlmc-rep", arguments.vlmc_representation,
+                 "Vlmc container representation to use.")
+      ->transform(CLI::CheckedTransformer(VLMC_rep_map, CLI::ignore_case));
+
+  app.add_option("-b,--background-order", arguments.background_order,
+                 "Background order.");
 }
 
 static std::random_device rd;

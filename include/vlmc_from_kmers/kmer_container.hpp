@@ -14,7 +14,7 @@
 namespace vlmc {
 
 enum Core { out, in, hash };
-enum Iteration { parallel, sequential };
+enum class Iteration { parallel, sequential };
 
 constexpr int max_k = 255;
 
