@@ -22,7 +22,7 @@ class MethodBenchmarks : public benchmark::Fixture {
 
 public:
   void SetUp(const ::benchmark::State &state) override { config_stxxl(); }
-  std::filesystem::path fasta_path{"../python-prototype/NC_022098.1.fasta"};
+  std::filesystem::path fasta_path{"NC_022098.1.fasta"};
 };
 
 BENCHMARK_F(MethodBenchmarks, InCore)
@@ -40,19 +40,19 @@ BENCHMARK_F(MethodBenchmarks, InCore)
   }
 }
 
-//BENCHMARK_F(MethodBenchmarks, OutOfCore)
-//(benchmark::State &state) {
-//  std::filesystem::path tmp_path = "test_tmp";
-//
-//  std::filesystem::create_directories(tmp_path);
-//  vlmc::configure_stxxl(tmp_path);
-//  std::filesystem::path run_path{"out-one.tree"};
-//
-//  for (auto _ : state) {
-//    int exit_one_code = vlmc::build_vlmc(fasta_path, 9, 2, 3.9075, run_path,
-//                                         tmp_path, Core::out);
-//  }
-//}
+BENCHMARK_F(MethodBenchmarks, OutOfCore)
+(benchmark::State &state) {
+  std::filesystem::path tmp_path = "test_tmp";
+
+  std::filesystem::create_directories(tmp_path);
+  vlmc::configure_stxxl(tmp_path);
+  std::filesystem::path run_path{"out-one.tree"};
+
+  for (auto _ : state) {
+    int exit_one_code = vlmc::build_vlmc(fasta_path, 9, 2, 3.9075, run_path,
+                                         tmp_path, Core::out);
+  }
+}
 
 BENCHMARK_F(MethodBenchmarks, HashMap)
 (benchmark::State &state) {

@@ -16,8 +16,6 @@ protected:
   void SetUp() override {}
 
   std::filesystem::path first_directory{"."};
-
-  size_t background_order = 0;
 };
 
 TEST_F(ParallelTest, SequentialEqParallel) {

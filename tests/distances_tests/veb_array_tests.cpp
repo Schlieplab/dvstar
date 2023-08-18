@@ -1,4 +1,3 @@
-#pragma once
 #include <gtest/gtest.h>
 
 #include "vlmc_from_kmers/distances/containers/veb_array.hpp"

@@ -61,6 +61,25 @@ TEST_F(DvstarTests, Similar) {
   EXPECT_FLOAT_EQ(dist, 0.15452552);
 }
 
+TEST_F(DvstarTests, SimilarPseudo) {
+  std::filesystem::path tmp_path = std::filesystem::temp_directory_path();
+
+  std::filesystem::create_directories(tmp_path);
+  vlmc::configure_stxxl(tmp_path);
+
+  std::filesystem::path run_one_path{"NC_028367.bintree"};
+  int exit_one_code = vlmc::build_vlmc(first_fasta, 6, 2, 3.9075,
+                                       run_one_path, tmp_path, Core::in);
+
+  std::filesystem::path run_two_path{"NC_045512.bintree"};
+  int exit_two_code = vlmc::build_vlmc(second_fasta, 6, 2, 3.9075,
+                                       run_two_path, tmp_path, Core::in);
+
+  double dist = dvstar(run_one_path, run_two_path, 0);
+
+  EXPECT_FLOAT_EQ(dist, 0.15452552);
+}
+
 TEST_F(DvstarTests, Different) {
   std::filesystem::path tmp_path = std::filesystem::temp_directory_path();
 

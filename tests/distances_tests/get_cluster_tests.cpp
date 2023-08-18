@@ -26,19 +26,3 @@ TEST_F(GetClusterTest, ClusterGetWithVlmcVector) {
   EXPECT_GT(container.size(), 0);
   EXPECT_GT(container.get(0).size(), 0);
 }
-
-// TEST_F(GetClusterTest, ClusterGetWithVlmcMultiVector) {
-//   auto container =
-//   cluster::get_cluster<container::VLMC_Indexing>(path_to_bintrees, 1, 0);
-//
-//   EXPECT_GT(container.size(), 0);
-//   EXPECT_EQ(container.get(0).get(1).integer_rep, 1);
-// }
-
-// TEST_F(GetClusterTest, ClusterPrettyPrint) {
-//   container::KmerCluster cluster1 =
-//   cluster::get_kmer_cluster(path_to_bintrees, 0); cluster1.prettyPrint();
-//
-//   container::KmerCluster cluster2 =
-//   cluster::get_kmer_cluster(path_to_bintrees, 1); cluster2.prettyPrint();
-// }

@@ -1,5 +1,3 @@
-#pragma once 
-
 #include <gtest/gtest.h>
 
 #include <cstdlib>
@@ -9,20 +7,17 @@
 #include <tuple>
 
 //Our files 
-#include "vlmc_container.hpp"
-#include "distances/dvstar.hpp"
-#include "vlmc_from_kmers/dvstar.hpp"
-#include "global_aliases.hpp"
+#include "vlmc_from_kmers/distances/vlmc_container.hpp"
+#include "vlmc_from_kmers/distances/distances/dvstar.hpp"
+#include "vlmc_from_kmers/distances/global_aliases.hpp"
 
 //Original implementation files
-#include <kmc_file.h>
 #include "vlmc_from_kmers/dvstar.hpp"
-#include "vlmc_from_kmers/build_vlmc.hpp"
 #include "vlmc_from_kmers/kmer.hpp"
 
-using VLMC_vector = container::VLMC_vector;
+using VLMC_vector = vlmc::container::SortedVector;
 
-extern const out_t error_tolerance;
+const out_t error_tolerance = 0.00000000001;
 
 class DvstarTests : public ::testing::Test {
 protected:
@@ -32,14 +27,14 @@ protected:
   std::filesystem::path second_fasta{"NC_045512.2.fa"};
   std::filesystem::path third_fasta{"NC_001497.2.fa"};
 
-  std::filesystem::path first_bintree{"../data/test_VLMCs/sequences_1.bintree"};
-  std::filesystem::path second_bintree{"../data/test_VLMCs/sequences_2.bintree"};
-  std::filesystem::path third_bintree{"../data/test_VLMCs/sequences_3.bintree"};
+  std::filesystem::path first_bintree{"NC_028367.bintree"};
+  std::filesystem::path second_bintree{"NC_045512.bintree"};
+  std::filesystem::path third_bintree{"NC_001497.bintree"};
 
   int background_order = 0;
 
   std::function<out_t(VLMC_vector &, VLMC_vector &)> dist_func = [&](auto &left, auto &right) {
-      return distance::dvstar<VLMC_vector>(left, right);
+      return vlmc::distance::dvstar<VLMC_vector>(left, right);
   };
 };
 
@@ -84,12 +79,12 @@ TEST_F(DvstarTests, multiple_runs_vector) {
 }
 
 TEST_F(DvstarTests, TestBackgroundOrder) {
-  for (int order = 0; order < 5; order++){
-    container::VLMC_vector first_vlmc_vector{first_bintree, order};
-    container::VLMC_vector second_vlmc_vector{second_bintree, order};
+  for (size_t order = 0; order < 5; order++){
+    VLMC_vector first_vlmc_vector{first_bintree, order};
+    VLMC_vector second_vlmc_vector{second_bintree, order};
 
-    auto dist_vector = distance::dvstar<VLMC_vector>(first_vlmc_vector, second_vlmc_vector);
-    auto old_dvstar_implementation = vlmc::dvstar(first_bintree, second_bintree, order);
+    auto dist_vector = vlmc::distance::dvstar<VLMC_vector>(first_vlmc_vector, second_vlmc_vector);
+    auto old_dvstar_implementation = vlmc::dvstar(first_bintree, second_bintree, (int)order);
 
     EXPECT_NEAR(old_dvstar_implementation, dist_vector, error_tolerance);
   }

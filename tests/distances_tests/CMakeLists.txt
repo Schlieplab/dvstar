@@ -9,3 +9,5 @@ test_case(parser_tests.cpp)
 test_case(read_in_kmer_tests.cpp)
 test_case(veb_array_tests.cpp)
 test_case(vlmc_container_tests.cpp)
+
+benchmark_case(distance_benchmarks.cpp)

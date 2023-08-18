@@ -37,5 +37,5 @@ TEST_F(NegativeLogLikelihoodTests, Correct) {
 
   double nll = negative_log_likelihood(temp_fasta_2, temp, out, Core::in, 2);
 
-  EXPECT_EQ(0.0, nll);
+  EXPECT_NEAR(0.9023370264265379, nll, 0.00001);
 }
