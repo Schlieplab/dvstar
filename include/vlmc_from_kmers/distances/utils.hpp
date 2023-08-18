@@ -60,7 +60,7 @@ int sign(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y) {
   return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
 }
 
-bool PointInTriangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y,
+bool is_point_in_triangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y,
                      int v3x, int v3y) {
   int d1, d2, d3;
   bool has_neg, has_pos;
@@ -82,8 +82,8 @@ void triangle_recursion(int start_index_left, int stop_index_left,
   auto diff_left = stop_index_left - start_index_left;
   auto diff_right = stop_index_right - start_index_right;
   if (diff_left == 1 && diff_right == 1) {
-    if (PointInTriangle(start_index_left, start_index_right, x1, y1, x2, y2, x3,
-                        y3)) {
+    if (is_point_in_triangle(start_index_left, start_index_right, x1, y1, x2,
+                             y2, x3, y3)) {
       fun(start_index_left, start_index_right);
     }
   } else if (diff_right > diff_left) {
