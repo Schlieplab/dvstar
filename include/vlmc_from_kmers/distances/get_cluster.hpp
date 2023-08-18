@@ -10,15 +10,18 @@
 
 namespace vlmc {
 template <typename VC>
-container::ClusterContainer<VC>
-get_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
+std::tuple<container::ClusterContainer<VC>, std::vector<std::string>>
+get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
             const size_t background_order, const int set_size = -1) {
   std::vector<std::filesystem::path> paths{};
-
-  for (const auto &dir_entry : recursive_directory_iterator(directory)) {
-    if (dir_entry.path().extension() == ".bintree") {
-      paths.push_back(dir_entry.path());
+  if (is_directory(path)) {
+    for (const auto &dir_entry : recursive_directory_iterator(path)) {
+      if (dir_entry.path().extension() == ".bintree") {
+        paths.push_back(dir_entry.path());
+      }
     }
+  } else {
+    paths.push_back(path);
   }
 
   size_t paths_size = paths.size();
@@ -54,7 +57,9 @@ get_kmer_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
   std::vector<std::filesystem::path> paths{};
 
   for (const auto &dir_entry : recursive_directory_iterator(directory)) {
-    paths.push_back(dir_entry.path());
+    if (dir_entry.path().extension() == ".bintree") {
+      paths.push_back(dir_entry.path());
+    }
   }
 
   size_t paths_size = paths.size();
@@ -84,8 +89,7 @@ get_kmer_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
         for (int x = 0; x < 4; x++) {
           kmer.next_char_prob[x] *= 1.0 / std::sqrt(cached_context(offset, x));
         }
-        clusters[idx].push(
-            container::KmerPair{kmer, index - start_index});
+        clusters[idx].push(container::KmerPair{kmer, index - start_index});
       }
     }
     clusters[idx].set_size(stop_index - start_index);
