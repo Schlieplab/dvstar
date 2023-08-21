@@ -76,6 +76,10 @@ matrix_t calculate_distances(vlmc::container::ClusterContainer<VC> &cluster,
 
   parallel::parallelize_triangle(cluster.size(), fun, requested_cores);
 
+  // We've only calculated the upper triangle.
+  distances.triangularView<Eigen::Lower>() =
+      distances.triangularView<Eigen::Upper>().transpose();
+
   return distances;
 }
 

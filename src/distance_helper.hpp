@@ -94,9 +94,6 @@ int compute_dissimilarity(vlmc::cli_arguments &arguments) {
   auto [distance_matrix, ids_from, ids_to] =
       apply_container(arguments, arguments.vlmc_representation, nr_cores);
 
-  // We've only calculated the upper triangle.
-  distance_matrix.triangularView<Eigen::Lower>() = distance_matrix.triangularView<Eigen::Upper>().transpose();
-
   if (arguments.out_path.empty()) {
     utils::print_matrix(distance_matrix);
   } else if (arguments.out_path.extension() == ".h5" ||
