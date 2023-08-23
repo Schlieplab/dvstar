@@ -54,12 +54,13 @@ int main(int argc, char *argv[]) {
   if (arguments.in_or_out_of_core == vlmc::Core::out) {
     std::filesystem::create_directories(arguments.tmp_path);
   }
-  vlmc::configure_stxxl(arguments.tmp_path);
 
   if (arguments.mode == vlmc::Mode::build) {
+    vlmc::configure_stxxl(arguments.tmp_path);
     return build(arguments, tmp_path_existed_before);
 
   } else if (arguments.mode == vlmc::Mode::build_from_kmc_db) {
+    vlmc::configure_stxxl(arguments.tmp_path);
     return build_from_kmc_db(arguments);
 
   } else if (arguments.mode == vlmc::Mode::dump) {
