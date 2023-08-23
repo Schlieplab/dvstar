@@ -16,14 +16,14 @@ matrix_t calculate_kmer_major(const vlmc::cli_arguments &arguments,
   }
 
   auto cluster = vlmc::get_kmer_cluster(arguments.in_path, use_cores,
-                                        arguments.background_order, 100);
+                                        arguments.background_order);
   if (arguments.to_path.empty()) {
     std::cout << "Calculating distances for single cluster." << std::endl;
     return vlmc::calc_dist::calculate_distance_major(cluster, cluster,
                                                      use_cores);
   }
   auto cluster_to = vlmc::get_kmer_cluster(arguments.to_path, use_cores,
-                                           arguments.background_order, 100);
+                                           arguments.background_order);
   std::cout << "Calculating distances." << std::endl;
   return vlmc::calc_dist::calculate_distance_major(cluster, cluster_to,
                                                    use_cores);
@@ -34,15 +34,16 @@ std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const vlmc::cli_arguments &arguments,
                            const size_t nr_cores) {
   auto [cluster, ids] = vlmc::get_cluster<VC>(arguments.in_path, nr_cores,
-                                              arguments.background_order, 100);
+                                              arguments.background_order);
   if (arguments.to_path.empty()) {
     std::cout << "Calculating distances matrix of size " << cluster.size()
               << "x" << cluster.size() << std::endl;
     return {vlmc::calc_dist::calculate_distances<VC>(cluster, nr_cores), ids,
             ids};
   }
-  auto [cluster_to, ids_to] = vlmc::get_cluster<VC>(
-      arguments.to_path, nr_cores, arguments.background_order, 100);
+  auto [cluster_to, ids_to] = vlmc::get_cluster<VC>(arguments.to_path, nr_cores,
+                                                    arguments.background_order);
+
   std::cout << "Calculating distances matrix of size " << cluster.size() << "x"
             << cluster_to.size() << std::endl;
 
