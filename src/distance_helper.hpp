@@ -36,7 +36,7 @@ calculate_cluster_distance(const vlmc::cli_arguments &arguments,
   auto [cluster, ids] = vlmc::get_cluster<VC>(arguments.in_path, nr_cores,
                                               arguments.background_order);
   if (arguments.to_path.empty()) {
-    std::cout << "Calculating distances matrix of size " << cluster.size()
+    std::clog << "Calculating distances matrix of size " << cluster.size()
               << "x" << cluster.size() << std::endl;
     return {vlmc::calc_dist::calculate_distances<VC>(cluster, nr_cores), ids,
             ids};
@@ -44,7 +44,7 @@ calculate_cluster_distance(const vlmc::cli_arguments &arguments,
   auto [cluster_to, ids_to] = vlmc::get_cluster<VC>(arguments.to_path, nr_cores,
                                                     arguments.background_order);
 
-  std::cout << "Calculating distances matrix of size " << cluster.size() << "x"
+  std::clog << "Calculating distances matrix of size " << cluster.size() << "x"
             << cluster_to.size() << std::endl;
 
   return {
@@ -96,7 +96,7 @@ int compute_dissimilarity(vlmc::cli_arguments &arguments) {
       apply_container(arguments, arguments.vlmc_representation, nr_cores);
 
   if (arguments.out_path.empty()) {
-    utils::print_matrix(distance_matrix);
+    utils::print_matrix(distance_matrix, ids_from, ids_to);
   } else if (arguments.out_path.extension() == ".h5" ||
              arguments.out_path.extension() == ".hdf5") {
     H5Easy::File file{arguments.out_path, HighFive::File::OpenOrCreate};
@@ -107,7 +107,7 @@ int compute_dissimilarity(vlmc::cli_arguments &arguments) {
     H5Easy::dump(file, "/ids", ids_from, H5Easy::DumpMode::Overwrite);
     H5Easy::dump(file, "/ids_to", ids_to, H5Easy::DumpMode::Overwrite);
 
-    std::cout << "Wrote distances to: " << arguments.out_path.string()
+    std::clog << "Wrote distances to: " << arguments.out_path.string()
               << std::endl;
   }
 

@@ -47,8 +47,16 @@ size_t get_used_cores(size_t requested_cores, size_t size) {
   return used_cores;
 }
 
-void print_matrix(matrix_t distance_matrix) {
+void print_matrix(const matrix_t &distance_matrix,
+                  const std::vector<std::string> &ids_from,
+                  const std::vector<std::string> &ids_to) {
+  for (size_t j = 0; j < distance_matrix.cols(); j++) {
+    std::cout << ids_to[j] << "\t";
+  }
+  std::cout << std::endl;
+
   for (size_t i = 0; i < distance_matrix.rows(); i++) {
+    std::cout << ids_from[i] << "\t";
     for (size_t j = 0; j < distance_matrix.cols(); j++) {
       std::cout << distance_matrix(i, j) << " ";
     }
@@ -61,7 +69,7 @@ int sign(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y) {
 }
 
 bool is_point_in_triangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y,
-                     int v3x, int v3y) {
+                          int v3x, int v3y) {
   int d1, d2, d3;
   bool has_neg, has_pos;
 
