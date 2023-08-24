@@ -12,7 +12,8 @@ namespace vlmc {
 template <typename VC>
 std::tuple<container::ClusterContainer<VC>, std::vector<std::string>>
 get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
-            const size_t background_order, const int set_size = -1) {
+            const size_t background_order,
+            const double pseudo_count_amount = 1.0, const int set_size = -1) {
   std::vector<std::filesystem::path> paths{};
   if (is_directory(path)) {
     for (const auto &dir_entry : recursive_directory_iterator(path)) {
@@ -41,7 +42,7 @@ get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
 
   auto fun = [&](size_t start_index, size_t stop_index) {
     for (int index = start_index; index < stop_index; index++) {
-      cluster[index] = VC(paths[index], background_order);
+      cluster[index] = VC(paths[index], background_order, pseudo_count_amount);
       ids[index] = paths[index].stem();
     }
   };
@@ -53,7 +54,8 @@ get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
 
 std::vector<container::KmerCluster>
 get_kmer_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
-                 const size_t background_order = 0, const int set_size = -1) {
+                 const size_t background_order = 0, const int set_size = -1,
+                 const double pseudo_count_amount = 1.0) {
   std::vector<std::filesystem::path> paths{};
 
   for (const auto &dir_entry : recursive_directory_iterator(directory)) {
@@ -80,7 +82,8 @@ get_kmer_cluster(const std::filesystem::path &directory, size_t nr_cores_to_use,
       auto fun = [&](const ReadInKmer &kmer) { input_vector.push_back(kmer); };
 
       int offset_to_remove = container::load_VLMCs_from_file(
-          paths[index], cached_context, fun, background_order);
+          paths[index], cached_context, fun, background_order,
+          pseudo_count_amount);
 
       for (auto kmer : input_vector) {
         int background_idx =

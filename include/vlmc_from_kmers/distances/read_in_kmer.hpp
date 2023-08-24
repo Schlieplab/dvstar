@@ -9,8 +9,6 @@
 #include "../kmer.hpp"
 #include "global_aliases.hpp"
 
-constexpr out_t pseudo_count_amount = 1.0;
-
 namespace vlmc {
 struct ReadInKmer {
   int integer_rep{};
@@ -19,7 +17,8 @@ struct ReadInKmer {
   ReadInKmer() = default;
   ~ReadInKmer() = default;
 
-  explicit ReadInKmer(const VLMCKmer &old_kmer) {
+  explicit ReadInKmer(const VLMCKmer &old_kmer,
+                      const double pseudo_count_amount = 1.0) {
     out_t child_count =
         old_kmer.next_symbol_counts[0] + old_kmer.next_symbol_counts[1] +
         old_kmer.next_symbol_counts[2] + old_kmer.next_symbol_counts[3] +

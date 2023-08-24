@@ -24,7 +24,8 @@ namespace vlmc::container {
 int load_VLMCs_from_file(const std::filesystem::path &path_to_bintree,
                          eigenx_t &cached_context,
                          const std::function<void(const ReadInKmer &kmer)> f,
-                         const size_t background_order = 0) {
+                         const size_t background_order = 0,
+                         const double pseudo_count_amount = 1.0) {
   std::ifstream ifs(path_to_bintree, std::ios::binary);
   cereal::BinaryInputArchive archive(ifs);
   VLMCKmer input_kmer{};
@@ -36,7 +37,7 @@ int load_VLMCs_from_file(const std::filesystem::path &path_to_bintree,
 
   while (ifs.peek() != EOF) {
     archive(input_kmer);
-    ReadInKmer ri_kmer{input_kmer};
+    ReadInKmer ri_kmer{input_kmer, pseudo_count_amount};
     if (input_kmer.length <= background_order) {
       if (input_kmer.length + 1 > background_order) {
         int offset = ri_kmer.integer_rep - offset_to_remove;
@@ -66,18 +67,21 @@ public:
 
   explicit SortedVector(const std::filesystem::path &path_to_bintree,
                         const size_t background_order = 0,
+                        const double pseudo_count_amount = 1.0,
                         bool use_new = false) {
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
 
     auto fun = [&](const ReadInKmer &kmer) { push(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     std::sort(std::execution::seq, vector.begin(), vector.end());
     for (size_t i = 0; i < size(); i++) {
       ReadInKmer kmer = get(i);
-      int background_idx = ReadInKmer::background_order_index(kmer.integer_rep, background_order);
+      int background_idx = ReadInKmer::background_order_index(kmer.integer_rep,
+                                                              background_order);
       int offset = background_idx - offset_to_remove;
       for (int x = 0; x < 4; x++) {
         get(i).next_char_prob[x] *= 1.0 / std::sqrt(cached_context(offset, x));
@@ -128,15 +132,17 @@ public:
   ~HashMap() = default;
 
   explicit HashMap(const std::filesystem::path &path_to_bintree,
-                   const size_t background_order = 0) {
+                   const size_t background_order = 0,
+                   const double pseudo_count_amount = 1.0) {
     // cached_context : pointer to array which for each A, C, T, G has the next
     // char probs
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
 
     auto fun = [&](const ReadInKmer &kmer) { push(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     for (auto &[i_rep, kmer] : map) {
       int background_idx =
@@ -175,7 +181,8 @@ public:
   ~VanEmdeBoasTree() = default;
 
   explicit VanEmdeBoasTree(const std::filesystem::path &path_to_bintree,
-                           const size_t background_order = 0) {
+                           const size_t background_order = 0,
+                           const double pseudo_count_amount = 1.0) {
     // cached_context : pointer to array which for each A, C, T, G has the next
     // char probs
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
@@ -183,8 +190,9 @@ public:
     auto tmp_container = std::vector<ReadInKmer>{};
     auto fun = [&](const ReadInKmer &kmer) { tmp_container.push_back(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     std::sort(std::execution::seq, tmp_container.begin(), tmp_container.end());
     for (auto &kmer : tmp_container) {
@@ -225,7 +233,8 @@ public:
   ~EytzingerTree() = default;
 
   explicit EytzingerTree(const std::filesystem::path &path_to_bintree,
-                         const size_t background_order = 0) {
+                         const size_t background_order = 0,
+                         const double pseudo_count_amount = 1.0) {
     // cached_context : pointer to array which for each A, C, T, G has the next
     // char probs
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
@@ -233,8 +242,9 @@ public:
     auto tmp_container = std::vector<ReadInKmer>{};
     auto fun = [&](const ReadInKmer &kmer) { tmp_container.push_back(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     std::sort(std::execution::seq, tmp_container.begin(), tmp_container.end());
     for (auto &kmer : tmp_container) {
@@ -274,7 +284,8 @@ public:
   ~BTree() = default;
 
   explicit BTree(const std::filesystem::path &path_to_bintree,
-                 const size_t background_order = 0) {
+                 const size_t background_order = 0,
+                 const double pseudo_count_amount = 1.0) {
     // cached_context : pointer to array which for each A, C, T, G has the next
     // char probs
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
@@ -282,8 +293,9 @@ public:
     auto tmp_container = std::vector<ReadInKmer>{};
     auto fun = [&](const ReadInKmer &kmer) { tmp_container.push_back(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     std::sort(std::execution::seq, tmp_container.begin(), tmp_container.end());
     for (auto &kmer : tmp_container) {
@@ -347,13 +359,16 @@ public:
   ~SortedSearch() = default;
 
   explicit SortedSearch(const std::filesystem::path &path_to_bintree,
-                     const size_t background_order = 0, bool use_new = false) {
+                        const size_t background_order = 0,
+                        const double pseudo_count_amount = 1.0,
+                        bool use_new = false) {
     eigenx_t cached_context((int)std::pow(4, background_order), 4);
 
     auto fun = [&](const ReadInKmer &kmer) { push(kmer); };
 
-    int offset_to_remove = load_VLMCs_from_file(path_to_bintree, cached_context,
-                                                fun, background_order);
+    int offset_to_remove =
+        load_VLMCs_from_file(path_to_bintree, cached_context, fun,
+                             background_order, pseudo_count_amount);
 
     std::sort(std::execution::seq, container_.begin(), container_.end());
     for (size_t i = 0; i < size(); i++) {

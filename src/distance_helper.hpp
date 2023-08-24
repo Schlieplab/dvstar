@@ -34,7 +34,7 @@ std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const vlmc::cli_arguments &arguments,
                            const size_t nr_cores) {
   auto [cluster, ids] = vlmc::get_cluster<VC>(arguments.in_path, nr_cores,
-                                              arguments.background_order);
+                                              arguments.background_order, arguments.pseudo_count_amount);
   if (arguments.to_path.empty()) {
     std::clog << "Calculating distances matrix of size " << cluster.size()
               << "x" << cluster.size() << std::endl;
@@ -42,7 +42,7 @@ calculate_cluster_distance(const vlmc::cli_arguments &arguments,
             ids};
   }
   auto [cluster_to, ids_to] = vlmc::get_cluster<VC>(arguments.to_path, nr_cores,
-                                                    arguments.background_order);
+                                                    arguments.background_order,arguments.pseudo_count_amount);
 
   std::clog << "Calculating distances matrix of size " << cluster.size() << "x"
             << cluster_to.size() << std::endl;
