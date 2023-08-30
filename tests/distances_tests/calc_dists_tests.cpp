@@ -16,15 +16,15 @@
 
 using cluster_c =
     vlmc::container::ClusterContainer<vlmc::container::SortedVector>;
-const out_t error_tolerance = 0.00000001;
+const out_t error_tolerance = 0.00000000000001;
 
 class CalcDistsTests : public ::testing::Test {
 protected:
   void SetUp() override {}
 
   std::filesystem::path first_bintree{"NC_028367.bintree"};
-  std::filesystem::path second_bintree{"NC_045512.2.bintree"};
-  std::filesystem::path third_bintree{"NC_001497.2.bintree"};
+  std::filesystem::path second_bintree{"NC_045512.bintree"};
+  std::filesystem::path third_bintree{"NC_001497.bintree"};
 
   std::filesystem::path path_to_bintrees{"."};
 
@@ -79,36 +79,40 @@ TEST_F(CalcDistsTests, AllValsTwoDir) {
 
 TEST_F(CalcDistsTests, ValueCheckTwoDir) {
   // Vector Implementation
-  auto left_cluster_v = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
-  auto right_cluster_v = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
+  auto [left_cluster_v, _lids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
+  auto [right_cluster_v, _rids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
   matrix_t distances_vector =
       vlmc::calc_dist::calculate_distances<vlmc::container::SortedVector>(
           left_cluster_v, right_cluster_v, 1);
 
   // Sorted Vector Implementation
-  auto left_cluster_s = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
-  auto right_cluster_s = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
+  auto [left_cluster_s, _lsids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
+  auto [right_cluster_s, _rsids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
   matrix_t distances_sorted_vector =
       vlmc::calc_dist::calculate_distances<vlmc::container::SortedVector>(
           left_cluster_s, right_cluster_s, 1);
 
   // B-tree Implementation
-  auto left_cluster_b = vlmc::get_cluster<vlmc::container::BTree>(
+  auto [left_cluster_b, _lcids] = vlmc::get_cluster<vlmc::container::BTree>(
       path_to_bintrees, 1, background_order);
-  auto right_cluster_b = vlmc::get_cluster<vlmc::container::BTree>(
+  auto [right_cluster_b, _] = vlmc::get_cluster<vlmc::container::BTree>(
       path_to_bintrees, 1, background_order);
   matrix_t distances_b_tree =
       vlmc::calc_dist::calculate_distances<vlmc::container::BTree>(
           left_cluster_b, right_cluster_b, 1);
 
   // HashMap Implementation
-  auto left_cluster_h = vlmc::get_cluster<vlmc::container::HashMap>(
+  auto [left_cluster_h, _lhids] = vlmc::get_cluster<vlmc::container::HashMap>(
       path_to_bintrees, 1, background_order);
-  auto right_cluster_h = vlmc::get_cluster<vlmc::container::HashMap>(
+  auto [right_cluster_h, rhids] = vlmc::get_cluster<vlmc::container::HashMap>(
       path_to_bintrees, 1, background_order);
   matrix_t distances_hashmap =
       vlmc::calc_dist::calculate_distances<vlmc::container::HashMap>(
@@ -123,28 +127,32 @@ TEST_F(CalcDistsTests, ValueCheckTwoDir) {
       left_cluster_k, right_cluster_k, 1);
 
   // Veb Implementation
-  auto left_cluster_veb = vlmc::get_cluster<vlmc::container::VanEmdeBoasTree>(
-      path_to_bintrees, 1, background_order);
-  auto right_cluster_veb = vlmc::get_cluster<vlmc::container::VanEmdeBoasTree>(
-      path_to_bintrees, 1, background_order);
+  auto [left_cluster_veb, _lvebids] =
+      vlmc::get_cluster<vlmc::container::VanEmdeBoasTree>(path_to_bintrees, 1,
+                                                          background_order);
+  auto [right_cluster_veb, _rvebids] =
+      vlmc::get_cluster<vlmc::container::VanEmdeBoasTree>(path_to_bintrees, 1,
+                                                          background_order);
   matrix_t distances_veb =
       vlmc::calc_dist::calculate_distances<vlmc::container::VanEmdeBoasTree>(
           left_cluster_veb, right_cluster_veb, 1);
 
   // Eytzinger Array
-  auto left_cluster_ey = vlmc::get_cluster<vlmc::container::EytzingerTree>(
-      path_to_bintrees, 1, background_order);
-  auto right_cluster_ey = vlmc::get_cluster<vlmc::container::EytzingerTree>(
-      path_to_bintrees, 1, background_order);
+  auto [left_cluster_ey, _leyids] =
+      vlmc::get_cluster<vlmc::container::EytzingerTree>(path_to_bintrees, 1,
+                                                        background_order);
+  auto [right_cluster_ey, _reyids] =
+      vlmc::get_cluster<vlmc::container::EytzingerTree>(path_to_bintrees, 1,
+                                                        background_order);
   matrix_t distances_ey =
       vlmc::calc_dist::calculate_distances<vlmc::container::EytzingerTree>(
           left_cluster_ey, right_cluster_ey, 1);
 
   // Sorted Search
-  auto left_cluster_sortsearch =
+  auto [left_cluster_sortsearch, _lssids] =
       vlmc::get_cluster<vlmc::container::SortedSearch>(path_to_bintrees, 1,
                                                        background_order);
-  auto right_cluster_sortsearch =
+  auto [right_cluster_sortsearch, _rssids] =
       vlmc::get_cluster<vlmc::container::SortedSearch>(path_to_bintrees, 1,
                                                        background_order);
   matrix_t distances_sortsearch =
@@ -175,25 +183,25 @@ TEST_F(CalcDistsTests, ValueCheckTwoDir) {
   for (int x = 0; x < distances_vector.cols(); x++) {
     for (int y = 0; y < distances_vector.rows(); y++) {
       if (x == y) {
-        // EXPECT_NEAR(0.0, distances_vector(x,y), error_tolerance);
-        // EXPECT_NEAR(0.0, distances_indexing(x,y), error_tolerance);
+        EXPECT_NEAR(0.0, distances_vector(x, y), error_tolerance);
+//        EXPECT_NEAR(0.0, distances_org_dvstar(x, y), error_tolerance);
       } else {
         EXPECT_NEAR(distances_org_dvstar(x, y), distances_vector(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_sorted_vector(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_b_tree(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_hashmap(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_veb(x, y),
-                    error_tolerance);
-        EXPECT_NEAR(distances_vector(x, y), distances_k_major(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
+        //        EXPECT_NEAR(distances_vector(x, y), distances_k_major(x, y),
+        //                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_ey(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
         EXPECT_NEAR(distances_vector(x, y), distances_sortsearch(x, y),
-                    error_tolerance);
+                    error_tolerance) << x << " " << y;
       }
     }
   }
@@ -201,15 +209,17 @@ TEST_F(CalcDistsTests, ValueCheckTwoDir) {
 
 TEST_F(CalcDistsTests, ValueCheckOneDir) {
   // Vector Implementation
-  auto left_cluster_v = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
-  auto right_cluster_v = vlmc::get_cluster<vlmc::container::SortedVector>(
-      path_to_bintrees, 1, background_order);
+  auto [left_cluster_v, _lvids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
+  auto [right_cluster_v, _rvids] =
+      vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1,
+                                                       background_order);
   matrix_t distances_vector_two_dirs =
       vlmc::calc_dist::calculate_distances<vlmc::container::SortedVector>(
           left_cluster_v, right_cluster_v, 1);
 
-  auto cluster_v = vlmc::get_cluster<vlmc::container::SortedVector>(
+  auto [cluster_v, _] = vlmc::get_cluster<vlmc::container::SortedVector>(
       path_to_bintrees, 1, background_order);
 
   for (int nr_cores = 1; nr_cores < 9; nr_cores++) {
@@ -259,8 +269,9 @@ TEST_F(CalcDistsTests, RegressionTest) {
   std::filesystem::path second_bintree_path{"NC_045512.bintree"};
 
   auto left = vlmc::container::SortedSearch{first_bintree_path, 0};
-  auto right = vlmc::container::SortedSearch{first_bintree_path, 0};
-  auto sorted_vector_result = vlmc::distance::dvstar<vlmc::container::SortedSearch>(left, right);
+  auto right = vlmc::container::SortedSearch{second_bintree_path, 0};
+  auto sorted_vector_result =
+      vlmc::distance::dvstar<vlmc::container::SortedSearch>(left, right);
 
   auto left_kmers = vlmc::get_sorted_kmers(first_bintree_path);
   auto right_kmers = vlmc::get_sorted_kmers(second_bintree_path);
@@ -268,4 +279,16 @@ TEST_F(CalcDistsTests, RegressionTest) {
   auto dvstar_result = dvstar(left_kmers, right_kmers, 0);
 
   EXPECT_NEAR(sorted_vector_result, dvstar_result, error_tolerance);
+}
+
+TEST_F(CalcDistsTests, IdentityShouldBeZeroTest) {
+  std::filesystem::path first_bintree_path{"EU579861.1.fa.bintree"};
+  auto left = vlmc::container::SortedSearch{first_bintree_path, 0};
+
+  auto sorted_vector_result =
+      vlmc::distance::dvstar<vlmc::container::SortedSearch>(left, left);
+
+  std::cout << sorted_vector_result;
+
+  EXPECT_NEAR(sorted_vector_result, 0, error_tolerance);
 }

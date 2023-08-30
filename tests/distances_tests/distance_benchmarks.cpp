@@ -16,7 +16,7 @@ public:
 BENCHMARK_F(DistanceBenchmarks, OriginalPath)
 (benchmark::State &state) {
   for (auto _ : state) {
-    double path_dist = dvstar(first_bintree_path, second_bintree_path, 0);
+    double path_dist = vlmc::dvstar(first_bintree_path, second_bintree_path, 0);
   }
 }
 
