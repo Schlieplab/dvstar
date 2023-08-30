@@ -58,7 +58,7 @@ void print_matrix(const matrix_t &distance_matrix,
   for (size_t i = 0; i < distance_matrix.rows(); i++) {
     std::cout << ids_from[i] << "\t";
     for (size_t j = 0; j < distance_matrix.cols(); j++) {
-      std::cout << distance_matrix(i, j) << " ";
+      std::cout << distance_matrix(i, j) << "\t";
     }
     std::cout << std::endl;
   }
