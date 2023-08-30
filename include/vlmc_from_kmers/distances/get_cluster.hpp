@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <format>
 #include <mutex>
 #include <thread>
 
@@ -21,8 +22,12 @@ get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
         paths.push_back(dir_entry.path());
       }
     }
-  } else {
+  } else if (path.extension() == ".bintree") {
     paths.push_back(path);
+  } else {
+    auto msg = std::format("Path {} is not a path to a directory or a VLMC.\n",
+                           path.string());
+    throw std::invalid_argument(msg);
   }
 
   size_t paths_size = paths.size();
