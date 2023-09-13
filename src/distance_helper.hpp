@@ -4,7 +4,6 @@
 #include "vlmc_from_kmers/distances/calc_dists.hpp"
 #include "vlmc_from_kmers/distances/get_cluster.hpp"
 #include "vlmc_from_kmers/distances/global_aliases.hpp"
-#include "vlmc_from_kmers/distances/parser.hpp"
 #include "vlmc_from_kmers/distances/utils.hpp"
 
 matrix_t calculate_kmer_major(const vlmc::cli_arguments &arguments,

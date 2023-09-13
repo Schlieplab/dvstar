@@ -1,8 +1,8 @@
+#include "highfive/H5Easy.hpp"
+
 #include "vlmc_from_kmers/build_vlmc.hpp"
 #include "distance_helper.hpp"
-#include "highfive/H5Easy.hpp"
 #include "vlmc_from_kmers/bic.hpp"
-#include "vlmc_from_kmers/distances/parser.hpp"
 #include "vlmc_from_kmers/dvstar.hpp"
 
 int build_from_kmc_db(const vlmc::cli_arguments &arguments) {
@@ -66,19 +66,25 @@ int main(int argc, char *argv[]) {
   } else if (arguments.mode == vlmc::Mode::dump) {
     return vlmc::dump_path(arguments.in_path, arguments.out_path);
   } else if (arguments.mode == vlmc::Mode::score_sequence) {
-    vlmc::negative_log_likelihood(
-        arguments.fasta_path, arguments.tmp_path, arguments.in_path,
-        arguments.in_or_out_of_core, arguments.max_depth);
+    int nr_cores =
+        vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
+    vlmc::negative_log_likelihood_multiple(
+        arguments.fasta_path, arguments.in_path,
+        arguments.pseudo_count_amount, nr_cores);
+
   } else if (arguments.mode == vlmc::Mode::bic) {
     vlmc::find_best_parameters_bic(
         arguments.fasta_path, arguments.max_depth, arguments.min_count,
         arguments.out_path, arguments.tmp_path, arguments.in_or_out_of_core);
+
   } else if (arguments.mode == vlmc::Mode::dissimilarity) {
     compute_dissimilarity(arguments);
+
   } else if (arguments.mode == vlmc::Mode::reprune) {
     return vlmc::reprune_vlmc(arguments.in_path, arguments.out_path,
                               arguments.in_or_out_of_core, arguments.threshold,
                               arguments.pseudo_count_amount);
+
   } else if (arguments.mode == vlmc::Mode::size) {
     auto [terminal_size, sequence_size] =
         vlmc::terminal_node_sum(arguments.in_path);

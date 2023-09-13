@@ -52,7 +52,7 @@ struct cli_arguments {
   std::filesystem::path tmp_path{"./tmp"};
   std::filesystem::path out_path{};
 
-  size_t degree_of_parallelism{1};
+  int degree_of_parallelism{1};
   VLMCRepresentation vlmc_representation{
       VLMCRepresentation::vlmc_sorted_search};
 
@@ -173,7 +173,7 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
                  "be missing due to sequencing errors.");
 }
 
-size_t parse_degree_of_parallelism(size_t requested_cores) {
+int parse_degree_of_parallelism(int requested_cores) {
   if (requested_cores < 1) {
     throw std::invalid_argument("Too low degree of parallelism, must be >= 1");
   } else {

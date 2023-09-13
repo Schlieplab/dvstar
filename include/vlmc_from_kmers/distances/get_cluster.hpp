@@ -8,27 +8,17 @@
 #include "cluster_container.hpp"
 #include "global_aliases.hpp"
 #include "parallel.hpp"
+#include "vlmc_from_kmers/io_helper.h"
 
 namespace vlmc {
+
+
 template <typename VC>
 std::tuple<container::ClusterContainer<VC>, std::vector<std::string>>
 get_cluster(const std::filesystem::path &path, size_t nr_cores_to_use,
             const size_t background_order,
             const double pseudo_count_amount = 1.0, const int set_size = -1) {
-  std::vector<std::filesystem::path> paths{};
-  if (is_directory(path)) {
-    for (const auto &dir_entry : recursive_directory_iterator(path)) {
-      if (dir_entry.path().extension() == ".bintree") {
-        paths.push_back(dir_entry.path());
-      }
-    }
-  } else if (path.extension() == ".bintree") {
-    paths.push_back(path);
-  } else {
-    auto msg = std::format("Path {} is not a path to a directory or a VLMC.\n",
-                           path.string());
-    throw std::invalid_argument(msg);
-  }
+  auto paths = get_recursive_paths(path, {".bintree"});
 
   size_t paths_size = paths.size();
   if ((set_size != -1) && (set_size < paths_size)) {

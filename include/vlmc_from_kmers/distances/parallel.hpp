@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
-#include <cstdlib>
 #include <thread>
 #include <vector>
 

@@ -50,30 +50,20 @@ count_terminal_nodes(const std::filesystem::path &tree_path) {
   return {n_terminal, sequence_size};
 }
 
-
 std::tuple<uint64, uint64>
-terminal_node_sum(const std::filesystem::path &tree_path) {
+terminal_node_sum(const std::filesystem::path &vlmc_path) {
   uint64 terminal_sum = 0;
   uint64 sequence_size = 0;
-  std::ifstream file_stream(tree_path, std::ios::binary);
-  {
-    cereal::BinaryInputArchive iarchive(file_stream);
 
-    VLMCKmer kmer{};
-    while (file_stream.peek() != EOF) {
-      iarchive(kmer);
-
-      if (kmer.is_terminal) {
-        terminal_sum += kmer.length;
-      }
-
-      if (kmer.length == 1) {
-        sequence_size += kmer.count;
-      }
+  vlmc::iterate_archive(vlmc_path, [&](const VLMCKmer &kmer) {
+    if (kmer.is_terminal) {
+      terminal_sum += kmer.length;
     }
-  }
 
-  file_stream.close();
+    if (kmer.length == 1) {
+      sequence_size += kmer.count;
+    }
+  });
 
   return {terminal_sum, sequence_size};
 }
@@ -102,15 +92,14 @@ std::tuple<int, int, double> find_best_parameters_bic(
     for (auto min_count : min_counts) {
       for (auto threshold : thresholds) {
         vlmc::build_vlmc_from_kmc_db(kmc_db_path, max_depth, min_count,
-                                     threshold, tree_path,
-                                     in_or_out_of_core);
+                                     threshold, tree_path, in_or_out_of_core);
 
         auto [n_terminal, sequence_size] = count_terminal_nodes(tree_path);
 
         auto nll_start = std::chrono::steady_clock::now();
 
         double negative_log_likelihood =
-            vlmc::negative_log_likelihood_from_kmc_db(
+            vlmc::details::negative_log_likelihood_from_kmc_db(
                 fasta_path, tmp_path, tree_path, in_or_out_of_core, max_depth,
                 kmc_db_path);
         auto nll_done = std::chrono::steady_clock::now();

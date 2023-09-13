@@ -50,7 +50,7 @@ std::filesystem::path run_kmc(const std::filesystem::path &fasta_path,
 
   std::ostringstream kmc_run_stream;
   kmc_run_stream << find_kmc();
-  kmc_run_stream << " -b -ci1 -cs4294967295";
+  kmc_run_stream << " -b -ci1 -cs4294967295 ";
 
   if (in_or_out_of_core == Core::in) {
     kmc_run_stream << "-r ";
