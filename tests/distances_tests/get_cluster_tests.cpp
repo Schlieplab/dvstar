@@ -19,7 +19,7 @@ protected:
 };
 
 TEST_F(GetClusterTest, ClusterGetWithVlmcVector) {
-  auto container =
+  auto [container, _] =
       vlmc::get_cluster<vlmc::container::SortedVector>(path_to_bintrees, 1, 0);
 
   // std::cout << container.get(0).get(0).to_string() << std::endl;

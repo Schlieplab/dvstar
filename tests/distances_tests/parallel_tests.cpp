@@ -19,7 +19,7 @@ protected:
 };
 
 TEST_F(ParallelTest, SequentialEqParallel) {
-  auto cluster =
+  auto [cluster, _] =
       vlmc::get_cluster<vlmc::container::SortedVector>(first_directory, 1, 0);
 
   matrix_t distances_parallel{cluster.size(), cluster.size()};
