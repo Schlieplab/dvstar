@@ -7,7 +7,7 @@ of sequences.
 This repository deals mainly with the task of constructing the VLMC, for scoring of sequences, or most dissimilarities
 between
 two VLMCs, please see the [pst-classifier-seqan repository](https://github.com/Schlieplab/PstClassifierSeqan), which
-accepts the output form this progam.
+accepts the output form this program.
 
 ## Publication
 

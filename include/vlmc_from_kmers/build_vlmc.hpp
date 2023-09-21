@@ -31,8 +31,8 @@ void configure_stxxl(const std::filesystem::path &tmp_path) {
   std::filesystem::path stxxl_disk_path = tmp_path / random_name;
   // create a disk_config structure.
   // allocate 6GB
-  stxxl::disk_config disk1(stxxl_disk_path, uint64(6000) * 1024 * 1024,
-                           "linuxaio unlink");
+  stxxl::disk_config disk1{stxxl_disk_path, uint64(6000) * 1024 * 1024,
+                           "linuxaio unlink"};
 
   cfg->add_disk(disk1);
 }

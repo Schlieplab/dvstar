@@ -1,13 +1,13 @@
-cmake_minimum_required (VERSION 3.4...3.12)
+cmake_minimum_required(VERSION 3.4...3.12)
 
-project (CountVLMC CXX)
+project(CountVLMC CXX)
 
 option(CountVLMC_COMPILE_TESTS "To compile tests, specify -DCountVLMC_COMPILE_TESTS=ON")
 
 set(MAIN_PROJECT OFF)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MAIN_PROJECT ON)
-endif()
+endif ()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,9 +43,9 @@ set(INCLUDE_DIRS ${STXXL_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/submodules/stxxl/i
 include_directories("${INCLUDE_DIRS}")
 
 
-if(NOT MAIN_PROJECT)
+if (NOT MAIN_PROJECT)
     set(CountVLMC_INCLUDE_DIRS ${INCLUDE_DIRS} PARENT_SCOPE)
-endif()
+endif ()
 
 
 set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} tbb kmc_file kmer_api mmer CLI11::CLI11)
@@ -59,12 +59,12 @@ target_include_directories(CountVLMC INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
         $<INSTALL_INTERFACE:include/>)
 
-if(MAIN_PROJECT)
-    add_executable(dvstar src/build_vlmc.cpp include/vlmc_from_kmers/context_archive.hpp include/vlmc_from_kmers/estimators.hpp include/vlmc_from_kmers/sequencing_adjustment.hpp)
+if (MAIN_PROJECT)
+    add_executable(dvstar src/build_vlmc.cpp)
     target_link_libraries(dvstar Threads::Threads)
     target_link_libraries(dvstar ${CountVLMC_LIBRARIES})
 
     if (CountVLMC_COMPILE_TESTS)
         add_subdirectory(tests)
-    endif()
-endif()
+    endif ()
+endif ()
