@@ -88,5 +88,6 @@ test_case(method_regression.cpp)
 
 benchmark_case(benchmarks.cpp)
 benchmark_case(method_benchmarks.cpp)
+benchmark_case(nll_benchmarks.cpp)
 
 add_subdirectory(distances_tests)

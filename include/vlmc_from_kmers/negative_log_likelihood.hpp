@@ -382,7 +382,8 @@ std::tuple<std::vector<std::vector<std::string>>,
            std::vector<std::vector<double>>>
 negative_log_likelihood_multiple(const std::filesystem::path &fasta_dir_path,
                                  const std::filesystem::path &vlmc_dir_path,
-                                 const double pseudo_count_amount, const int number_of_cores) {
+                                 const double pseudo_count_amount,
+                                 const int number_of_cores) {
 
   auto fasta_paths =
       get_recursive_paths(fasta_dir_path, {".fasta", ".fa", ".fna", ".gz"});

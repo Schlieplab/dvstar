@@ -95,9 +95,11 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option(
          "-m,--mode", arguments.mode,
          "Program mode, 'build', 'build-from-kmc-db', 'dump', 'score', "
-         "'reprune', or 'dissimilarity'.  For "
-         "build-from-kmc-db, the kmc db needs to include all k-mers (not in "
-         "canonical form), with no minimum count cutoff.  The length of the "
+         "'reprune', 'dissimilarity', or 'dissimilarity-fasta'. "
+         "'dissimiarity-fasta' first computes VLMCs for all fasta files and "
+         "then computes the dvstar dissimilarity."
+         "  For build-from-kmc-db, the kmc db needs to include all k-mers (not "
+         "in canonical form), with no minimum count cutoff.  The length of the "
          "k-mers needs to be set to 1 more than the maximum depth of the VLMC. "
          " The kmc db also has to be sorted.")
       ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));

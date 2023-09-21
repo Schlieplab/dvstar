@@ -17,6 +17,7 @@ list(APPEND CMAKE_MODULE_PATH "/usr/share/cmake/Modules/")
 find_package(Threads REQUIRED)
 find_package(OpenMP REQUIRED CXX)
 find_package(TBB REQUIRED)
+find_package(Boost REQUIRED COMPONENTS iostreams)
 
 add_library(kmc_file STATIC submodules/KMC/kmc_api/kmc_file.cpp)
 add_library(kmer_api STATIC submodules/KMC/kmc_api/kmer_api.cpp)
@@ -38,17 +39,24 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/CLI11)
 set(SKIP_PERFORMANCE_COMPARISON ON)
 
 # Add include paths
-set(INCLUDE_DIRS ${STXXL_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/submodules/stxxl/include" "${PROJECT_SOURCE_DIR}/submodules/robin-hood-hashing/src/include" "${PROJECT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/submodules/KMC/kmc_api" "${CMAKE_CURRENT_SOURCE_DIR}/submodules/cereal/include")
+set(INCLUDE_DIRS ${STXXL_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/submodules/stxxl/include" "${PROJECT_SOURCE_DIR}/submodules/robin-hood-hashing/src/include" "${PROJECT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/submodules/KMC/kmc_api" "${PROJECT_SOURCE_DIR}/submodules/cereal/include" "${PROJECT_SOURCE_DIR}/submodules/eigen" "${PROJECT_SOURCE_DIR}/submodules/unordered_dense/include")
 
 include_directories("${INCLUDE_DIRS}")
 
+set(USE_BOOST OFF)
+set(HIGHFIVE_USE_BOOST OFF)
+set(HIGHFIVE_USE_EIGEN ON)
+set(HIGHFIVE_EXAMPLES FALSE)
+
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+add_subdirectory("${CMAKE_SOURCE_DIR}/submodules/HighFive")
 
 if (NOT MAIN_PROJECT)
     set(CountVLMC_INCLUDE_DIRS ${INCLUDE_DIRS} PARENT_SCOPE)
 endif ()
 
 
-set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} tbb kmc_file kmer_api mmer CLI11::CLI11)
+set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} tbb kmc_file kmer_api mmer CLI11::CLI11 HighFive Boost::iostreams)
 
 add_library(CountVLMC INTERFACE)
 add_library(CountVLMC::CountVLMC ALIAS CountVLMC)
