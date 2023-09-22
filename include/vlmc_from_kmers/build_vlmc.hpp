@@ -185,19 +185,14 @@ int dump_path(const std::filesystem::path &in_path,
   std::ifstream file_stream(in_path, std::ios::binary);
   cereal::BinaryInputArchive iarchive(file_stream);
 
-  std::ostream *ofs = &std::cout;
-  std::ofstream out_stream(out_path);
-
   if (out_path.empty()) {
-    ofs = &std::cout;
+    vlmc::iterate_archive(
+        in_path, [&](const VLMCKmer &kmer) { kmer.output(std::cout); });
   } else {
-    ofs = &out_stream;
+    std::ofstream out_stream(out_path);
+    vlmc::iterate_archive(
+        in_path, [&](const VLMCKmer &kmer) { kmer.output(out_stream); });
   }
-
-  vlmc::iterate_archive(in_path,
-                        [&](const VLMCKmer &kmer) { kmer.output(*ofs); });
-
-  out_stream.close();
 
   return EXIT_SUCCESS;
 }
