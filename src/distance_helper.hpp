@@ -94,13 +94,13 @@ template <typename VC>
 std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const std::filesystem::path &in_path,
                            const double pseudo_count_amount,
-                           int background_order, const size_t nr_cores) {
+                           int background_order, const size_t n_threads) {
   auto [cluster, ids] = vlmc::get_cluster<VC>(
-      in_path, nr_cores, background_order, pseudo_count_amount);
+      in_path, n_threads, background_order, pseudo_count_amount);
 
   std::clog << "Calculating distances matrix of size " << cluster.size() << "x"
             << cluster.size() << std::endl;
-  return {vlmc::calc_dist::calculate_distances<VC>(cluster, nr_cores), ids,
+  return {vlmc::calc_dist::calculate_distances<VC>(cluster, n_threads), ids,
           ids};
 }
 
@@ -109,62 +109,62 @@ std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const std::filesystem::path &in_path,
                            const std::filesystem::path &to_path,
                            const double pseudo_count_amount,
-                           int background_order, const size_t nr_cores) {
+                           int background_order, const size_t n_threads) {
   auto [cluster, ids] = vlmc::get_cluster<VC>(
-      in_path, nr_cores, background_order, pseudo_count_amount);
+      in_path, n_threads, background_order, pseudo_count_amount);
 
   auto [cluster_to, ids_to] = vlmc::get_cluster<VC>(
-      to_path, nr_cores, background_order, pseudo_count_amount);
+      to_path, n_threads, background_order, pseudo_count_amount);
 
   std::clog << "Calculating distances matrix of size " << cluster.size() << "x"
             << cluster_to.size() << std::endl;
 
   return {
-      vlmc::calc_dist::calculate_distances<VC>(cluster, cluster_to, nr_cores),
+      vlmc::calc_dist::calculate_distances<VC>(cluster, cluster_to, n_threads),
       ids, ids_to};
 }
 
 template <typename VC>
 std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const vlmc::cli_arguments &arguments,
-                           const size_t nr_cores) {
+                           const size_t n_threads) {
   if (arguments.to_path.empty()) {
     return calculate_cluster_distance<VC>(arguments.in_path,
                                           arguments.pseudo_count_amount,
-                                          arguments.background_order, nr_cores);
+                                          arguments.background_order, n_threads);
 
   } else {
     return calculate_cluster_distance<VC>(arguments.in_path, arguments.to_path,
                                           arguments.pseudo_count_amount,
-                                          arguments.background_order, nr_cores);
+                                          arguments.background_order, n_threads);
   }
 }
 
 std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 apply_container(const vlmc::cli_arguments &arguments,
                 vlmc::VLMCRepresentation vlmc_container,
-                const size_t nr_cores) {
+                const size_t n_threads) {
   if (vlmc_container == vlmc::VLMCRepresentation::vlmc_sorted_vector) {
     return calculate_cluster_distance<vlmc::container::SortedVector>(arguments,
-                                                                     nr_cores);
+                                                                     n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_b_tree) {
     return calculate_cluster_distance<vlmc::container::BTree>(arguments,
-                                                              nr_cores);
+                                                              n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_hashmap) {
     return calculate_cluster_distance<vlmc::container::HashMap>(arguments,
-                                                                nr_cores);
+                                                                n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_veb) {
     return calculate_cluster_distance<vlmc::container::VanEmdeBoasTree>(
-        arguments, nr_cores);
+        arguments, n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_ey) {
     return calculate_cluster_distance<vlmc::container::EytzingerTree>(arguments,
-                                                                      nr_cores);
+                                                                      n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_sorted_search) {
     return calculate_cluster_distance<vlmc::container::SortedSearch>(arguments,
-                                                                     nr_cores);
+                                                                     n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_kmer_major) {
     throw std::logic_error{"K-mer major currently not implemented."};
-    //    return calculate_kmer_major(arguments, nr_cores);
+    //    return calculate_kmer_major(arguments, n_threads);
   }
   return {};
 }
@@ -177,11 +177,11 @@ int compute_dissimilarity(vlmc::cli_arguments &arguments) {
     return EXIT_FAILURE;
   }
 
-  size_t nr_cores =
+  size_t n_threads =
       vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
 
   auto [distance_matrix, ids_from, ids_to] =
-      apply_container(arguments, arguments.vlmc_representation, nr_cores);
+      apply_container(arguments, arguments.vlmc_representation, n_threads);
 
   output_distances(arguments, distance_matrix, ids_from, ids_to);
 
@@ -209,6 +209,9 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
 
   auto start_building = std::chrono::steady_clock::now();
 
+  auto n_threads =
+      vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
+
   for (auto &fasta_path : fasta_paths) {
     auto out_path = bintree_path / fasta_path.stem();
     out_path.replace_extension(".bintree");
@@ -228,15 +231,12 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
 
   std::clog << "VLMC construction time: " << building_duration.count() << "s\n";
 
-  auto nr_cores =
-      vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
-
   auto start_distances = std::chrono::steady_clock::now();
 
   auto [distance_matrix, ids_from, ids_to] =
       calculate_cluster_distance<vlmc::container::SortedSearch>(
           bintree_path, arguments.pseudo_count_amount,
-          arguments.background_order, nr_cores);
+          arguments.background_order, n_threads);
 
   auto done_distances = std::chrono::steady_clock::now();
   std::chrono::duration<double> distances_duration =
