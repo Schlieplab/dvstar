@@ -15,18 +15,15 @@ From: debian:bullseye
     CMakeLists.txt /vlmc-from-kmers/CMakeLists.txt
 
 %post
-    apt-get update -y && apt-get install -y cmake build-essential g++ git gcc libtbb-dev libgomp1
+    apt-get update -y && apt-get install -y cmake build-essential g++ git gcc libtbb-dev libgomp1 libeigen3-dev libhdf5-dev libboost-dev
     echo 'deb http://deb.debian.org/debian testing main' >> /etc/apt/sources.list
     apt update -y
     apt install -y gcc g++
 
-    mkdir -p /vlmc-from-kmers/build
-    cd /vlmc-from-kmers/build/
+    cmake -DCMAKE_BUILD_TYPE=Release -DVSTAR_COMPILE_TESTS=ON -S . -B build
+    cmake --build build
 
     mkdir -p /vlmc-from-kmers/build/fasta /vlmc-from-kmers/build/tmp /vlmc-from-kmers/build/results
-
-    cmake -DCMAKE_BUILD_TYPE=Release -DCountVLMC_COMPILE_TESTS=ON ..
-    make
 
     cp ../visualiser.py .
 

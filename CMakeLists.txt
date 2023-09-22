@@ -31,7 +31,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/stxxl)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
 
 # Parallelization
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltbb -fopenmp -fpermissive")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 # CLI11 for command line interface
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/CLI11)
@@ -46,17 +46,18 @@ include_directories("${INCLUDE_DIRS}")
 set(USE_BOOST OFF)
 set(HIGHFIVE_USE_BOOST OFF)
 set(HIGHFIVE_USE_EIGEN ON)
-set(HIGHFIVE_EXAMPLES FALSE)
+set(HIGHFIVE_EXAMPLES OFF)
+set(HIGHFIVE_UNIT_TESTS OFF)
 
 find_package(HDF5 REQUIRED COMPONENTS CXX)
-add_subdirectory("${CMAKE_SOURCE_DIR}/submodules/HighFive")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/submodules/HighFive")
 
 if (NOT MAIN_PROJECT)
     set(CountVLMC_INCLUDE_DIRS ${INCLUDE_DIRS} PARENT_SCOPE)
 endif ()
 
 
-set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} tbb kmc_file kmer_api mmer CLI11::CLI11 HighFive Boost::iostreams)
+set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} TBB::tbb kmc_file kmer_api mmer CLI11::CLI11 HighFive Boost::iostreams)
 
 add_library(CountVLMC INTERFACE)
 add_library(CountVLMC::CountVLMC ALIAS CountVLMC)
@@ -69,10 +70,10 @@ target_include_directories(CountVLMC INTERFACE
 
 if (MAIN_PROJECT)
     add_executable(dvstar src/build_vlmc.cpp)
-    target_link_libraries(dvstar Threads::Threads)
-    target_link_libraries(dvstar ${CountVLMC_LIBRARIES})
+    target_link_libraries(dvstar PUBLIC Threads::Threads)
+    target_link_libraries(dvstar PUBLIC CountVLMC::CountVLMC)
 
-    if (CountVLMC_COMPILE_TESTS)
+    if (DVSTAR_COMPILE_TESTS)
         add_subdirectory(tests)
     endif ()
 endif ()
