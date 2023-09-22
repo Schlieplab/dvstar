@@ -34,7 +34,8 @@ std::string find_kmc_tools() {
 std::filesystem::path run_kmc(const std::filesystem::path &fasta_path,
                               const int kmer_size,
                               const std::filesystem::path &tmp_path,
-                              const Core &in_or_out_of_core) {
+                              const Core &in_or_out_of_core,
+                              const bool quiet = false) {
   std::string random_name = get_random_name("kmc_");
 
   std::filesystem::path kmc_db_path = tmp_path / (random_name + "_res");
@@ -61,7 +62,11 @@ std::filesystem::path run_kmc(const std::filesystem::path &fasta_path,
   } else {
     kmc_run_stream << "-fm " << fasta_path << " ";
   }
+
   kmc_run_stream << kmc_db_path << " " << kmc_tmp;
+  if (quiet) {
+    kmc_run_stream << " > /dev/null";
+  }
   std::string kmc_run_command = kmc_run_stream.str();
 
   auto kmc_run_code = system(kmc_run_command.c_str());
@@ -78,20 +83,26 @@ std::filesystem::path run_kmc(const std::filesystem::path &fasta_path,
   kmc_sort_stream << kmc_db_path;
   kmc_sort_stream << " sort ";
   kmc_sort_stream << kmc_db_sorted_path;
+  if (quiet) {
+    kmc_sort_stream << " > /dev/null";
+  }
+
   std::string kmc_sort_command = kmc_sort_stream.str();
 
-  auto kmc_sort_code = system(kmc_sort_command.c_str()); // TODO is it possible / permitted under GPL
-                                    // v3 to compile kmc into our binary?
+  // TODO could compile kmc into the library here... they have an API now.
+  auto kmc_sort_code = system(kmc_sort_command.c_str());
   if (kmc_sort_code != 0) {
       throw std::runtime_error("kmc_tools command " + kmc_sort_command + " failed.");
   }
   auto kmc_sort_done = std::chrono::steady_clock::now();
 
-  std::chrono::duration<double> kmc_run_seconds = kmc_run_done - kmc_run;
-  std::cout << "KMC count time: " << kmc_run_seconds.count() << "s\n";
+  if (!quiet) {
+    std::chrono::duration<double> kmc_run_seconds = kmc_run_done - kmc_run;
+    std::clog << "KMC count time: " << kmc_run_seconds.count() << "s\n";
 
-  std::chrono::duration<double> kmc_sort_seconds = kmc_sort_done - kmc_sort;
-  std::cout << "KMC sort time: " << kmc_sort_seconds.count() << "s\n";
+    std::chrono::duration<double> kmc_sort_seconds = kmc_sort_done - kmc_sort;
+    std::clog << "KMC sort time: " << kmc_sort_seconds.count() << "s\n";
+  }
 
   std::filesystem::remove_all(kmc_tmp);
 

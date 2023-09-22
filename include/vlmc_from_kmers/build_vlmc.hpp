@@ -20,7 +20,7 @@
 #include "similarity_pruning.hpp"
 #include "support_pruning.hpp"
 
-bool LOGGING = true;
+bool LOGGING = false;
 
 namespace vlmc {
 
@@ -107,7 +107,8 @@ int build_vlmc_from_kmc_db(
   auto sorting_done = std::chrono::steady_clock::now();
 
   auto out_path_directory = out_path.parent_path();
-  if (!out_path_directory.empty()) {
+  if (!std::filesystem::is_directory(out_path_directory) &&
+      !out_path_directory.empty()) {
     std::filesystem::create_directories(out_path_directory);
   }
 
@@ -154,13 +155,14 @@ int build_vlmc(const std::filesystem::path &fasta_path, const int max_depth,
                const double pseudo_count_amount = 1.0,
                const Estimator estimator = Estimator::kullback_leibler,
                const SequencingParameters sequencing_parameters =
-                   SequencingParameters{false}) {
+                   SequencingParameters{false},
+               const bool quiet = false) {
   auto start = std::chrono::steady_clock::now();
 
   const int kmer_size = max_depth + 1;
 
   auto kmc_db_path =
-      run_kmc(fasta_path, kmer_size, tmp_path, in_or_out_of_core);
+      run_kmc(fasta_path, kmer_size, tmp_path, in_or_out_of_core, quiet);
 
   auto kmc_done = std::chrono::steady_clock::now();
 
@@ -172,6 +174,7 @@ int build_vlmc(const std::filesystem::path &fasta_path, const int max_depth,
   auto status = build_vlmc_from_kmc_db(
       kmc_db_path, max_depth, min_count, threshold, out_path, in_or_out_of_core,
       pseudo_count_amount, estimator, sequencing_parameters);
+
   remove_kmc_files(kmc_db_path);
 
   return status;
