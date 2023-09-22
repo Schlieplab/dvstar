@@ -80,6 +80,8 @@ int main(int argc, char *argv[]) {
   } else if (arguments.mode == vlmc::Mode::dissimilarity) {
     compute_dissimilarity(arguments);
 
+  } else if (arguments.mode == vlmc::Mode::dissimilarity_fasta) {
+    compute_dissimilarity_fasta(arguments);
   } else if (arguments.mode == vlmc::Mode::reprune) {
     return vlmc::reprune_vlmc(arguments.in_path, arguments.out_path,
                               arguments.in_or_out_of_core, arguments.threshold,

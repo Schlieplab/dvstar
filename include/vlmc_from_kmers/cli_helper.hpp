@@ -22,7 +22,14 @@ enum Mode {
   build_from_kmc_db,
   dissimilarity,
   reprune,
-  size
+  size,
+  dissimilarity_fasta,
+};
+
+enum class DistancesFormat {
+  phylip,
+  square,
+  hdf5,
 };
 
 enum VLMCRepresentation {
@@ -37,7 +44,6 @@ enum VLMCRepresentation {
 
 enum Dissimilarity {
   dvstar_dissimliarity,
-  penalized_dvstar_dissimliarity,
 };
 
 enum Estimator { kullback_leibler, peres_shields };
@@ -66,6 +72,8 @@ struct cli_arguments {
   Core in_or_out_of_core{Core::in};
 
   SequencingParameters sequencing_parameters{false};
+
+  DistancesFormat distances_output_format{DistancesFormat::phylip};
 };
 
 void add_options(CLI::App &app, cli_arguments &arguments) {
@@ -76,12 +84,12 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
       {"bic", Mode::bic},
       {"build-from-kmc-db", Mode::build_from_kmc_db},
       {"dissimilarity", Mode::dissimilarity},
+      {"dissimilarity-fasta", Mode::dissimilarity_fasta},
       {"size", Mode::size},
       {"reprune", Mode::reprune}};
 
   std::map<std::string, Dissimilarity> dissimilarity_map{
       {"dvstar", Dissimilarity::dvstar_dissimliarity},
-      {"penalized-dvstar", Dissimilarity::penalized_dvstar_dissimliarity},
   };
 
   std::map<std::string, Estimator> estimator_map{
@@ -91,6 +99,11 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
 
   std::map<std::string, Core> core_map{
       {"internal", Core::in}, {"external", Core::out}, {"hash", Core::hash}};
+
+  std::map<std::string, DistancesFormat> format_map{
+      {"phylip", DistancesFormat::phylip},
+      {"square", DistancesFormat::square},
+      {"hdf5", DistancesFormat::hdf5}};
 
   app.add_option(
          "-m,--mode", arguments.mode,
@@ -112,6 +125,11 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
                  "Estimator for the pruning of the VLMC, either "
                  "'kullback-leibler',  or 'peres-shields'.")
       ->transform(CLI::CheckedTransformer(estimator_map, CLI::ignore_case));
+
+  app.add_option("--distances-format", arguments.distances_output_format,
+                 "Output format of the distances. Either 'phylip', 'square', "
+                 "or 'hdf5'.")
+      ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
 
   app.add_option(
       "-p,--fasta-path", arguments.fasta_path,
@@ -142,6 +160,7 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
 
   app.add_option("-c,--min-count", arguments.min_count,
                  "Minimum count required for every k-mer in the tree.");
+
   app.add_option("-k,--threshold", arguments.threshold,
                  "Kullback-Leibler threshold.");
 
@@ -164,10 +183,12 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
       "Give this flag to adjust the estimator parameters and min counts for "
       "the sequencing depth and error rates of a sequencing dataset. See "
       "--sequencing-depth and --sequencing-error-rate for parameters.");
+
   app.add_option("--sequencing-depth", arguments.sequencing_parameters.depth,
                  "If --adjust-for-sequencing-errors is given, this parameter "
                  "is used to alter the estimator parameters to reflect that "
                  "many k-mers will be --sequencing-depth times more frequent.");
+
   app.add_option("--sequencing-error-rate",
                  arguments.sequencing_parameters.error_rate,
                  "If --adjust-for-sequencing-errors is given, this parameter "

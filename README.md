@@ -109,6 +109,14 @@ To compute the dvstar similarity between two VLMCs:
 ./dvstar --mode dissimilarity --dissimilarity dvstar --in-path NC_022098.1.bintree --to-path NC_022098.1.bintree
 ```
 
+To directly compute vlmcs and their dissimilarities from a directory of vlmcs:
+
+```shell
+./dvstar --mode dissimilarity-fasta --fasta-path directory-with-multiple-fastas --out-path output-path
+```
+
+The output of this is distances in the phylip-format, which can then be provided to phylogenetic tools to construct trees (e.g., [`RapidNJ`](https://github.com/somme89/rapidNJ) or [`decentree`](https://github.com/iqtree/decenttree)).
+
 To build a VLMC directly from a KMC db, ensure that the kmc parameters `-ci1` and `-cs4294967295`(or other large number)
 are used. Also ensure that the `-k` parameter is set to 1 larger than the max depth parameter given to `dvstar`.
 
