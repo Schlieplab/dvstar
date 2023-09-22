@@ -58,7 +58,7 @@ struct cli_arguments {
   std::filesystem::path tmp_path{"./tmp"};
   std::filesystem::path out_path{};
 
-  int degree_of_parallelism{1};
+  uint degree_of_parallelism{std::thread::hardware_concurrency()};
   VLMCRepresentation vlmc_representation{
       VLMCRepresentation::vlmc_sorted_search};
 
@@ -215,7 +215,7 @@ void add_distance_options(CLI::App &app, cli_arguments &arguments) {
       {"veb", VLMCRepresentation::vlmc_veb}};
 
   app.add_option("-n,--max-dop", arguments.degree_of_parallelism,
-                 "Degree of parallelism. Default 1 (sequential).");
+                 "Degree of parallelism. Defaults to all available cores.");
 
   app.add_option("-v,--vlmc-rep", arguments.vlmc_representation,
                  "Vlmc container representation to use.")
