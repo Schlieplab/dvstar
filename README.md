@@ -55,7 +55,7 @@ cmake --build build
 ```
 
 __Note that kmc3 needs to be installed separately, and be in the current working directory, or in your path.__
-Both `kmc` and `kmc_tools` are required.
+Both `kmc` and `kmc_tools` are required. [Both are available on their github releases page](https://github.com/refresh-bio/KMC/releases).
 
 This provides an executable `dvstar`, which can be used as follows:
 
