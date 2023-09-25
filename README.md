@@ -37,7 +37,8 @@ sudo apptainer build vlmc-from-kmers.sif vlmc-from-kmers.def
 * intel TBB (`tbb` in brew, `libtbb-dev` on debian).
 * boost iostreams (`boost` in brew, `libboost-dev` on debian).
 * hdf5 (`hdf5` in brew, `libhdf5-dev` on debian).
-* eigen3 (`eigen` in brew, `libeigen3-dev` on debian.)
+* eigen3 (`eigen` in brew, `libeigen3-dev` on debian).
+* cmake (`cmake` in brew, `cmake` on debian).
 
 Create a build directory, configure with cmake and build:
 
