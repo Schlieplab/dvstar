@@ -214,11 +214,11 @@ void add_distance_options(CLI::App &app, cli_arguments &arguments) {
       {"kmer-major", VLMCRepresentation::vlmc_kmer_major},
       {"veb", VLMCRepresentation::vlmc_veb}};
 
-  app.add_option("-n,--max-dop", arguments.degree_of_parallelism,
-                 "Degree of parallelism. Defaults to all available cores.");
+  app.add_option("-n,--n-threads", arguments.degree_of_parallelism,
+                 "Number of threads for distance computations. Defaults to all available cores.");
 
   app.add_option("-v,--vlmc-rep", arguments.vlmc_representation,
-                 "Vlmc container representation to use.")
+                 "Vlmc container representation to use for distances computation.")
       ->transform(CLI::CheckedTransformer(VLMC_rep_map, CLI::ignore_case));
 
   app.add_option("-b,--background-order", arguments.background_order,
