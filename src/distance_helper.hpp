@@ -193,8 +193,8 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
     std::cerr << "Error: A --fasta-path needs to be provided." << std::endl;
     return EXIT_FAILURE;
   }
-  if (arguments.out_path.empty()) {
-    std::cerr << "Error: An --out-path needs to be provided." << std::endl;
+  if (arguments.cache_path.empty()) {
+    std::cerr << "Error: An --cache-path needs to be provided." << std::endl;
     return EXIT_FAILURE;
   }
 

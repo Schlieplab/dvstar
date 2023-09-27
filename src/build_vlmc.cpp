@@ -3,7 +3,6 @@
 #include "distance_helper.hpp"
 #include "vlmc_from_kmers/bic.hpp"
 #include "vlmc_from_kmers/build_vlmc.hpp"
-#include "vlmc_from_kmers/dvstar.hpp"
 
 int build_from_kmc_db(const vlmc::cli_arguments &arguments) {
   int exit_code = vlmc::build_vlmc_from_kmc_db(
@@ -154,6 +153,7 @@ int main(int argc, char *argv[]) {
               << ", Sequence size: " << sequence_size << std::endl;
   });
 
+  app.require_subcommand(1);
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
