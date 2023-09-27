@@ -129,14 +129,14 @@ std::tuple<matrix_t, std::vector<std::string>, std::vector<std::string>>
 calculate_cluster_distance(const vlmc::cli_arguments &arguments,
                            const size_t n_threads) {
   if (arguments.to_path.empty()) {
-    return calculate_cluster_distance<VC>(arguments.in_path,
-                                          arguments.pseudo_count_amount,
-                                          arguments.background_order, n_threads);
+    return calculate_cluster_distance<VC>(
+        arguments.in_path, arguments.pseudo_count_amount,
+        arguments.background_order, n_threads);
 
   } else {
-    return calculate_cluster_distance<VC>(arguments.in_path, arguments.to_path,
-                                          arguments.pseudo_count_amount,
-                                          arguments.background_order, n_threads);
+    return calculate_cluster_distance<VC>(
+        arguments.in_path, arguments.to_path, arguments.pseudo_count_amount,
+        arguments.background_order, n_threads);
   }
 }
 
@@ -157,8 +157,8 @@ apply_container(const vlmc::cli_arguments &arguments,
     return calculate_cluster_distance<vlmc::container::VanEmdeBoasTree>(
         arguments, n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_ey) {
-    return calculate_cluster_distance<vlmc::container::EytzingerTree>(arguments,
-                                                                      n_threads);
+    return calculate_cluster_distance<vlmc::container::EytzingerTree>(
+        arguments, n_threads);
   } else if (vlmc_container == vlmc::VLMCRepresentation::vlmc_sorted_search) {
     return calculate_cluster_distance<vlmc::container::SortedSearch>(arguments,
                                                                      n_threads);
@@ -212,22 +212,38 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
   auto n_threads =
       vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
 
-  for (auto &fasta_path : fasta_paths) {
-    auto out_path = bintree_path / fasta_path.stem();
-    out_path.replace_extension(".bintree");
+  std::clog << "Computing signatures" << std::endl;
 
-    if (!std::filesystem::exists(out_path)) {
-      int exit_code = vlmc::build_vlmc(
-          fasta_path, arguments.max_depth, arguments.min_count,
-          arguments.threshold, out_path, arguments.tmp_path,
-          arguments.in_or_out_of_core, arguments.pseudo_count_amount,
-          arguments.estimator, arguments.sequencing_parameters, true);
+  vlmc::parallel::parallelize(
+      fasta_paths.size(),
+      [&](size_t start_index, size_t stop_index) {
+        for (size_t i = start_index; i < stop_index; i++) {
+          auto fasta_path = fasta_paths[i];
+          auto out_path = bintree_path / fasta_path.stem();
+          out_path.replace_extension(".bintree");
 
-      if (exit_code != EXIT_SUCCESS) {
-        return exit_code;
-      }
-    }
-  }
+          if (!std::filesystem::exists(fasta_path)) {
+            std::cerr << i << ", " << start_index << ", " << stop_index << std::endl;
+            std::cerr << fasta_path.string() << " is not a file" << std::endl;
+            continue;
+          }
+
+          if (!std::filesystem::exists(out_path)) {
+            int exit_code = vlmc::build_vlmc(
+                fasta_path, arguments.max_depth, arguments.min_count,
+                arguments.threshold, out_path, arguments.tmp_path,
+                arguments.in_or_out_of_core, arguments.pseudo_count_amount,
+                arguments.estimator, arguments.sequencing_parameters, true);
+
+            if (exit_code != EXIT_SUCCESS) {
+              return exit_code;
+            }
+          }
+        }
+        return EXIT_SUCCESS;
+      },
+      n_threads);
+
   auto done_building = std::chrono::steady_clock::now();
   std::chrono::duration<double> building_duration =
       done_building - start_building;
