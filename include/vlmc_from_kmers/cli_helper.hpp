@@ -115,9 +115,6 @@ void add_shared_build_options(CLI::App &app, cli_arguments &arguments) {
                  "'kullback-leibler',  or 'peres-shields'.")
       ->transform(CLI::CheckedTransformer(estimator_map, CLI::ignore_case));
 
-  app.add_option("-o,--out-path", arguments.out_path, "Path to output .bintree file. Will add .bintree as extension to the file if missing.")
-      ->required();
-
   add_tmp_path_option(app, arguments);
 
   app.add_option(
@@ -154,17 +151,27 @@ void add_shared_build_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_build_options(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("-p,--fasta-path", arguments.fasta_path, "Path to fasta file.")
+      ->required();
+  app.add_option("-o,--out-path", arguments.out_path,
+                 "Path to output .bintree file. Will add .bintree as extension "
+                 "to the file if missing.")
+      ->required();
+
   add_shared_build_options(app, arguments);
-  app.add_option("-p,--fasta-path", arguments.fasta_path,
-                 "Path to fasta file.")->required();
 }
 
 void add_build_from_kmc_options(CLI::App &app, cli_arguments &arguments) {
-  add_shared_build_options(app, arguments);
   app.add_option("-p,--in-path", arguments.in_path,
                  "Path to kmc db file. The path to the kmc db file needs to be "
                  "supplied without the file extension")
       ->required();
+  app.add_option("-o,--out-path", arguments.out_path,
+                 "Path to output .bintree file. Will add .bintree as extension "
+                 "to the file if missing.")
+      ->required();
+
+  add_shared_build_options(app, arguments);
 }
 
 void add_dump_options(CLI::App &app, cli_arguments &arguments) {
@@ -217,7 +224,6 @@ void add_bic_options(CLI::App &app, cli_arguments &arguments) {
   add_pseudo_count_option(app, arguments);
 }
 
-
 int parse_degree_of_parallelism(int requested_cores) {
   if (requested_cores < 1) {
     throw std::invalid_argument("Too low degree of parallelism, must be >= 1");
@@ -249,8 +255,6 @@ void add_shared_distance_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option("-b,--background-order", arguments.background_order,
                  "Background order.");
 
-  add_pseudo_count_option(app, arguments);
-
   std::map<std::string, DistancesFormat> format_map{
       {"phylip", DistancesFormat::phylip},
       {"square", DistancesFormat::square},
@@ -277,24 +281,26 @@ void add_shared_distance_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_distance_options(CLI::App &app, cli_arguments &arguments) {
-  add_shared_distance_options(app, arguments);
-
   app.add_option(
-      "--in-path", arguments.in_path,
-      "Path to a saved .bintree file or directory of .bintree files.")->required();
+         "--in-path", arguments.in_path,
+         "Path to a saved .bintree file or directory of .bintree files.")
+      ->required();
 
   app.add_option(
       "--to-path", arguments.to_path,
       "Path to a saved .bintree file or directory of .bintree files. "
       "If empty, the distances are "
       "computed between the files in the --in-path.");
+
+  add_shared_distance_options(app, arguments);
+  add_pseudo_count_option(app, arguments);
 }
 
 void add_distance_fasta_options(CLI::App &app, cli_arguments &arguments) {
-  add_shared_distance_options(app, arguments);
 
-  app.add_option("--in-path", arguments.in_path,
-                 "Path to a fasta file or directory of fasta files.")->required();
+  app.add_option("--fasta-path", arguments.fasta_path,
+                 "Path to a fasta file or directory of fasta files.")
+      ->required();
 
   app.add_option("--to-path", arguments.to_path,
                  "Path to a fasta file or directory of fasta files. "
@@ -310,11 +316,16 @@ void add_distance_fasta_options(CLI::App &app, cli_arguments &arguments) {
       "a matching name is found here, it will not be re-computed. Note that "
       "this is not parameter-aware and so should be cleaned or changed to a "
       "different path if the parameters are changed.");
+
+  add_shared_distance_options(app, arguments);
+
+  add_shared_build_options(app, arguments);
 }
 
 void add_reprune_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option("--in-path", arguments.in_path,
-                 "Path to a previously computed .bintree file.")->required();
+                 "Path to a previously computed .bintree file.")
+      ->required();
 
   app.add_option("-o,--out-path", arguments.out_path,
                  "Path to output .bintree file.");
@@ -329,7 +340,8 @@ void add_reprune_options(CLI::App &app, cli_arguments &arguments) {
 
 void add_size_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option("--in-path", arguments.in_path,
-                 "Path to a previously computed .bintree file.")->required();
+                 "Path to a previously computed .bintree file.")
+      ->required();
 }
 
 static std::random_device rd;
