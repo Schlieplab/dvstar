@@ -20,12 +20,18 @@ void iterate_archive(const std::filesystem::path &path,
   std::ifstream fs(path, std::ios::binary);
   cereal::BinaryInputArchive archive(fs);
 
-  VLMCKmer kmer{};
-  while (details::has_next(fs)) {
-    details::next(archive, kmer);
-    f(kmer);
+  try {
+    VLMCKmer kmer{};
+    while (details::has_next(fs)) {
+      details::next(archive, kmer);
+      f(kmer);
+    }
+    fs.close();
+  } catch (cereal::Exception &e) {
+    std::cerr << path.string() << " could be be loaded." << std::endl;
+    throw e;
   }
-  fs.close();
+
 
 }
 } // namespace vlmc

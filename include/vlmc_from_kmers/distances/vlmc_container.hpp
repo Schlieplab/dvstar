@@ -26,17 +26,13 @@ int load_VLMCs_from_file(const std::filesystem::path &path_to_bintree,
                          const std::function<void(const ReadInKmer &kmer)> f,
                          const size_t background_order = 0,
                          const double pseudo_count_amount = 1.0) {
-  std::ifstream ifs(path_to_bintree, std::ios::binary);
-  cereal::BinaryInputArchive archive(ifs);
-  VLMCKmer input_kmer{};
 
   int offset_to_remove = 0;
   for (int i = 0; i < background_order; i++) {
     offset_to_remove += std::pow(4, i);
   }
 
-  while (ifs.peek() != EOF) {
-    archive(input_kmer);
+  iterate_archive(path_to_bintree, [&](const VLMCKmer &input_kmer) {
     ReadInKmer ri_kmer{input_kmer, pseudo_count_amount};
     if (input_kmer.length <= background_order) {
       if (input_kmer.length + 1 > background_order) {
@@ -49,8 +45,7 @@ int load_VLMCs_from_file(const std::filesystem::path &path_to_bintree,
     } else {
       f(ri_kmer);
     }
-  }
-  ifs.close();
+  });
 
   return offset_to_remove;
 }

@@ -9,7 +9,7 @@ std::vector<std::filesystem::path>
 get_recursive_paths(const std::filesystem::path &path,
                     const std::set<std::string> &allowed_extensions) {
   std::vector<std::filesystem::path> paths{};
-  if (is_directory(path)) {
+  if (std::filesystem::is_directory(path)) {
     for (const auto &dir_entry :
          std::filesystem::recursive_directory_iterator(path)) {
       if (allowed_extensions.find(dir_entry.path().extension()) !=
