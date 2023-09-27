@@ -90,6 +90,10 @@ std::tuple<int, int, double> find_best_parameters_bic(
         run_kmc(fasta_path, kmer_size, tmp_path, in_or_out_of_core);
 
     for (auto min_count : min_counts) {
+      if (min_count < min_min_count) {
+        continue;
+      }
+
       for (auto threshold : thresholds) {
         vlmc::build_vlmc_from_kmc_db(kmc_db_path, max_depth, min_count,
                                      threshold, tree_path, in_or_out_of_core);

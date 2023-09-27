@@ -57,8 +57,10 @@ struct cli_arguments {
   std::filesystem::path to_path;
   std::filesystem::path tmp_path{"./tmp"};
   std::filesystem::path out_path{};
+  std::filesystem::path cache_path{"./vlmc"};
 
-  uint degree_of_parallelism{std::thread::hardware_concurrency()};
+  int degree_of_parallelism{
+      static_cast<int>(std::thread::hardware_concurrency())};
   VLMCRepresentation vlmc_representation{
       VLMCRepresentation::vlmc_sorted_search};
 
@@ -66,7 +68,7 @@ struct cli_arguments {
   int max_depth = 9;
   double threshold = 3.9075;
 
-  double pseudo_count_amount = 1.0;
+  double pseudo_count_amount = 0.001;
   int background_order = 0;
 
   Core in_or_out_of_core{Core::in};
@@ -76,106 +78,59 @@ struct cli_arguments {
   DistancesFormat distances_output_format{DistancesFormat::phylip};
 };
 
-void add_options(CLI::App &app, cli_arguments &arguments) {
-  std::map<std::string, Mode> mode_map{
-      {"build", Mode::build},
-      {"score", Mode::score_sequence},
-      {"dump", Mode::dump},
-      {"bic", Mode::bic},
-      {"build-from-kmc-db", Mode::build_from_kmc_db},
-      {"dissimilarity", Mode::dissimilarity},
-      {"dissimilarity-fasta", Mode::dissimilarity_fasta},
-      {"size", Mode::size},
-      {"reprune", Mode::reprune}};
+void add_pseudo_count_option(CLI::App &app, cli_arguments &arguments) {
+  app.add_option(
+      "-a,--pseudo-count-amount", arguments.pseudo_count_amount,
+      "Size of pseudo count for probability estimation. See e.g. "
+      "https://en.wikipedia.org/wiki/Additive_smoothing . Defaults to 0.001.");
+}
 
-  std::map<std::string, Dissimilarity> dissimilarity_map{
-      {"dvstar", Dissimilarity::dvstar_dissimliarity},
-  };
+void add_memory_model_options(CLI::App &app, cli_arguments &arguments) {
+  std::map<std::string, Core> core_map{
+      {"internal", Core::in}, {"external", Core::out}, {"hash", Core::hash}};
+  app.add_option(
+         "-i, --in-or-out-of-core", arguments.in_or_out_of_core,
+         "Specify 'internal' for in-core or 'external' for out-of-core memory "
+         "model.  Out of core is slower, but is not memory bound. Defaults to "
+         "internal.")
+      ->transform(CLI::CheckedTransformer(core_map, CLI::ignore_case));
+}
 
+void add_tmp_path_option(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("-t,--temp-path", arguments.tmp_path,
+                 "Path to temporary folder for the external memory algorithms. "
+                 " For good performance, this needs to be on a local machine.  "
+                 "For sorting, at least 2GB will be allocated to this path.  "
+                 "Defaults to ./tmp");
+}
+
+void add_shared_build_options(CLI::App &app, cli_arguments &arguments) {
   std::map<std::string, Estimator> estimator_map{
       {"kullback-leibler", Estimator::kullback_leibler},
       {"peres-shields", Estimator::peres_shields},
   };
-
-  std::map<std::string, Core> core_map{
-      {"internal", Core::in}, {"external", Core::out}, {"hash", Core::hash}};
-
-  std::map<std::string, DistancesFormat> format_map{
-      {"phylip", DistancesFormat::phylip},
-      {"square", DistancesFormat::square},
-      {"hdf5", DistancesFormat::hdf5}};
-
-  app.add_option(
-         "-m,--mode", arguments.mode,
-         "Program mode, 'build', 'build-from-kmc-db', 'dump', 'score', "
-         "'reprune', 'dissimilarity', or 'dissimilarity-fasta'. "
-         "'dissimiarity-fasta' first computes VLMCs for all fasta files and "
-         "then computes the dvstar dissimilarity."
-         "  For build-from-kmc-db, the kmc db needs to include all k-mers (not "
-         "in canonical form), with no minimum count cutoff.  The length of the "
-         "k-mers needs to be set to 1 more than the maximum depth of the VLMC. "
-         " The kmc db also has to be sorted.")
-      ->transform(CLI::CheckedTransformer(mode_map, CLI::ignore_case));
-
-  app.add_option("--dissimilarity", arguments.dissimilarity,
-                 "Dissimilarity type, either 'dvstar',  or 'penalized-dvstar'.")
-      ->transform(CLI::CheckedTransformer(dissimilarity_map, CLI::ignore_case));
 
   app.add_option("--estimator", arguments.estimator,
                  "Estimator for the pruning of the VLMC, either "
                  "'kullback-leibler',  or 'peres-shields'.")
       ->transform(CLI::CheckedTransformer(estimator_map, CLI::ignore_case));
 
-  app.add_option("--distances-format", arguments.distances_output_format,
-                 "Output format of the distances. Either 'phylip', 'square', "
-                 "or 'hdf5'.")
-      ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
+  app.add_option("-o,--out-path", arguments.out_path, "Path to output .bintree file. Will add .bintree as extension to the file if missing.")
+      ->required();
+
+  add_tmp_path_option(app, arguments);
 
   app.add_option(
-      "-p,--fasta-path", arguments.fasta_path,
-      "Path to fasta file.  Required for 'build' and 'score' modes.");
-
-  app.add_option(
-      "--in-path", arguments.in_path,
-      "Path to saved tree file(s) or kmc db file.  Required for "
-      "'build-from-kmc-db', 'dump', 'score', and 'dissimilarity' modes.  For "
-      "'build-from-kmc-db', the kmc db file needs to be supplied "
-      "without the file extension.");
-
-  app.add_option(
-      "--to-path", arguments.to_path,
-      "Path to saved tree file(s).  Required for 'dissimilarity' mode.");
-
-  app.add_option("-o,--out-path", arguments.out_path,
-                 "Path to output file.  The VLMCs are stored as binary, and "
-                 "can be read by the 'dump' or 'score' modes.  Required for "
-                 "'build' and 'dump' modes. If supplied for 'dissimilarity' "
-                 "mode, will save result in a hdf5 file at the path.");
-
-  app.add_option("-t,--temp-path", arguments.tmp_path,
-                 "Path to temporary folder for the external memory algorithms. "
-                 " For good performance, this needs to be on a local machine.  "
-                 "For sorting, at least 2GB will be allocated to this path.  "
-                 "Defaults to ./tmp");
-
-  app.add_option("-c,--min-count", arguments.min_count,
-                 "Minimum count required for every k-mer in the tree.");
+      "-c,--min-count", arguments.min_count,
+      "Minimum count required for every k-mer in the tree. Defaults to 2.");
 
   app.add_option("-k,--threshold", arguments.threshold,
-                 "Kullback-Leibler threshold.");
+                 "Kullback-Leibler threshold. Defaults to 3.9075.");
 
   app.add_option("-d,--max-depth", arguments.max_depth,
-                 "Maximum depth/length for included k-mers.");
+                 "Maximum depth/length for included k-mers. Defaults to 9.");
 
-  app.add_option("-a,--pseudo-count-amount", arguments.pseudo_count_amount,
-                 "Size of pseudo count for probability estimation. See e.g. "
-                 "https://en.wikipedia.org/wiki/Additive_smoothing .");
-
-  app.add_option(
-         "-i, --in-or-out-of-core", arguments.in_or_out_of_core,
-         "Specify 'internal' for in-core or 'external' for out-of-core memory "
-         "model.  Out of core is slower, but is not memory bound. ")
-      ->transform(CLI::CheckedTransformer(core_map, CLI::ignore_case));
+  add_pseudo_count_option(app, arguments);
 
   app.add_flag(
       "--adjust-for-sequencing-errors",
@@ -194,7 +149,74 @@ void add_options(CLI::App &app, cli_arguments &arguments) {
                  "If --adjust-for-sequencing-errors is given, this parameter "
                  "is used to alter to estimate the number of k-mers that will "
                  "be missing due to sequencing errors.");
+
+  add_memory_model_options(app, arguments);
 }
+
+void add_build_options(CLI::App &app, cli_arguments &arguments) {
+  add_shared_build_options(app, arguments);
+  app.add_option("-p,--fasta-path", arguments.fasta_path,
+                 "Path to fasta file.")->required();
+}
+
+void add_build_from_kmc_options(CLI::App &app, cli_arguments &arguments) {
+  add_shared_build_options(app, arguments);
+  app.add_option("-p,--in-path", arguments.in_path,
+                 "Path to kmc db file. The path to the kmc db file needs to be "
+                 "supplied without the file extension")
+      ->required();
+}
+
+void add_dump_options(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("-p,--in-path", arguments.in_path,
+                 "Path to a .bintree file (the output from `build`).")
+      ->required();
+
+  app.add_option(
+      "-o,--out-path", arguments.out_path,
+      "Path to output text file. Will write to stdout if not provided.");
+}
+
+void add_score_options(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("--in-path", arguments.in_path,
+                 "Path to a .bintree file (the output from `build`) or a "
+                 "directory of .bintree files.")
+      ->required();
+
+  app.add_option("--fasta-path", arguments.fasta_path,
+                 "Path to either a fasta file or a directory of fasta files.")
+      ->required();
+
+  add_pseudo_count_option(app, arguments);
+
+  app.add_option("-n,--n-threads", arguments.degree_of_parallelism,
+                 "Number of threads for distance computations. Defaults to all "
+                 "available cores.");
+}
+
+void add_bic_options(CLI::App &app, cli_arguments &arguments) {
+  add_memory_model_options(app, arguments);
+
+  app.add_option("-p,--fasta-path", arguments.fasta_path,
+                 "Path to fasta file to build VLMC for.")
+      ->required();
+
+  app.add_option("-d,--max-max-depth", arguments.max_depth,
+                 "The largest max depth to try. Larger max depths drastically "
+                 "increases the computation time. Defaults to 9.");
+
+  app.add_option("-t,--min-min-count", arguments.min_count,
+                 "The smallest min count to try. Smaller min counts increase "
+                 "the computation time. Defaults to 2.");
+
+  app.add_option("-o,--out-path", arguments.out_path,
+                 "The .bintree file is written to this location during "
+                 "computation of the BIC.")
+      ->required();
+
+  add_pseudo_count_option(app, arguments);
+}
+
 
 int parse_degree_of_parallelism(int requested_cores) {
   if (requested_cores < 1) {
@@ -204,7 +226,7 @@ int parse_degree_of_parallelism(int requested_cores) {
   }
 }
 
-void add_distance_options(CLI::App &app, cli_arguments &arguments) {
+void add_shared_distance_options(CLI::App &app, cli_arguments &arguments) {
   std::map<std::string, VLMCRepresentation> VLMC_rep_map{
       {"sbs", VLMCRepresentation::vlmc_sorted_search},
       {"sorted-vector", VLMCRepresentation::vlmc_sorted_vector},
@@ -214,15 +236,100 @@ void add_distance_options(CLI::App &app, cli_arguments &arguments) {
       {"kmer-major", VLMCRepresentation::vlmc_kmer_major},
       {"veb", VLMCRepresentation::vlmc_veb}};
 
-  app.add_option("-n,--n-threads", arguments.degree_of_parallelism,
-                 "Number of threads for distance computations. Defaults to all available cores.");
-
   app.add_option("-v,--vlmc-rep", arguments.vlmc_representation,
-                 "Vlmc container representation to use for distances computation.")
+                 "VLMC container representation to use for distances "
+                 "computation. Defaults to sorted-search which gives the "
+                 "fastest average execution time.")
       ->transform(CLI::CheckedTransformer(VLMC_rep_map, CLI::ignore_case));
+
+  app.add_option("-n,--n-threads", arguments.degree_of_parallelism,
+                 "Number of threads for distance computations. Defaults to all "
+                 "available cores.");
 
   app.add_option("-b,--background-order", arguments.background_order,
                  "Background order.");
+
+  add_pseudo_count_option(app, arguments);
+
+  std::map<std::string, DistancesFormat> format_map{
+      {"phylip", DistancesFormat::phylip},
+      {"square", DistancesFormat::square},
+      {"hdf5", DistancesFormat::hdf5}};
+
+  app.add_option("--distances-format", arguments.distances_output_format,
+                 "Output format of the distances. Either 'phylip', 'square', "
+                 "or 'hdf5'.")
+      ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
+
+  app.add_option(
+      "-o,--out-path", arguments.out_path,
+      "Path to output file. If empty, the result will be written to stdout.");
+
+  // No longer have multiple dissimilarities implemented here.
+  //  std::map<std::string, Dissimilarity> dissimilarity_map{
+  //      {"dvstar", Dissimilarity::dvstar_dissimliarity},
+  //  };
+  //  app.add_option("--dissimilarity", arguments.dissimilarity,
+  //                 "Dissimilarity type, either 'dvstar',  or
+  //                 'penalized-dvstar'.")
+  //      ->transform(CLI::CheckedTransformer(dissimilarity_map,
+  //      CLI::ignore_case));
+}
+
+void add_distance_options(CLI::App &app, cli_arguments &arguments) {
+  add_shared_distance_options(app, arguments);
+
+  app.add_option(
+      "--in-path", arguments.in_path,
+      "Path to a saved .bintree file or directory of .bintree files.")->required();
+
+  app.add_option(
+      "--to-path", arguments.to_path,
+      "Path to a saved .bintree file or directory of .bintree files. "
+      "If empty, the distances are "
+      "computed between the files in the --in-path.");
+}
+
+void add_distance_fasta_options(CLI::App &app, cli_arguments &arguments) {
+  add_shared_distance_options(app, arguments);
+
+  app.add_option("--in-path", arguments.in_path,
+                 "Path to a fasta file or directory of fasta files.")->required();
+
+  app.add_option("--to-path", arguments.to_path,
+                 "Path to a fasta file or directory of fasta files. "
+                 "If empty, the distances are "
+                 "computed between the files in the --in-path.");
+
+  app.add_option(
+      "--cache-path", arguments.cache_path,
+      "Path to directory where the computed VLMCs are stored. Defaults to "
+      "'vlmc'. The resulting "
+      "VLMCs are not cleaned after computation has finished to speed-up "
+      "further computation with the same VLMCs and parameters. If a VLMC with "
+      "a matching name is found here, it will not be re-computed. Note that "
+      "this is not parameter-aware and so should be cleaned or changed to a "
+      "different path if the parameters are changed.");
+}
+
+void add_reprune_options(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("--in-path", arguments.in_path,
+                 "Path to a previously computed .bintree file.")->required();
+
+  app.add_option("-o,--out-path", arguments.out_path,
+                 "Path to output .bintree file.");
+
+  add_memory_model_options(app, arguments);
+
+  app.add_option("-k,--threshold", arguments.threshold,
+                 "New Kullback-Leibler threshold.");
+
+  add_pseudo_count_option(app, arguments);
+}
+
+void add_size_options(CLI::App &app, cli_arguments &arguments) {
+  app.add_option("--in-path", arguments.in_path,
+                 "Path to a previously computed .bintree file.")->required();
 }
 
 static std::random_device rd;

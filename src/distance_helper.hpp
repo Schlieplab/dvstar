@@ -201,7 +201,7 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
   auto fasta_paths = vlmc::get_recursive_paths(
       arguments.fasta_path, {".fasta", ".fa", ".fna", ".gz"});
 
-  auto bintree_path = arguments.out_path / "vlmcs";
+  auto bintree_path = arguments.cache_path;
 
   bool tmp_path_existed_before = std::filesystem::exists(arguments.tmp_path);
 
@@ -215,14 +215,17 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
   for (auto &fasta_path : fasta_paths) {
     auto out_path = bintree_path / fasta_path.stem();
     out_path.replace_extension(".bintree");
-    int exit_code = vlmc::build_vlmc(
-        fasta_path, arguments.max_depth, arguments.min_count,
-        arguments.threshold, out_path, arguments.tmp_path,
-        arguments.in_or_out_of_core, arguments.pseudo_count_amount,
-        arguments.estimator, arguments.sequencing_parameters, true);
 
-    if (exit_code != EXIT_SUCCESS) {
-      return exit_code;
+    if (!std::filesystem::exists(out_path)) {
+      int exit_code = vlmc::build_vlmc(
+          fasta_path, arguments.max_depth, arguments.min_count,
+          arguments.threshold, out_path, arguments.tmp_path,
+          arguments.in_or_out_of_core, arguments.pseudo_count_amount,
+          arguments.estimator, arguments.sequencing_parameters, true);
+
+      if (exit_code != EXIT_SUCCESS) {
+        return exit_code;
+      }
     }
   }
   auto done_building = std::chrono::steady_clock::now();
