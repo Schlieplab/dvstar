@@ -98,7 +98,7 @@ To compute the dvstar similarity between two VLMCs:
 dvstar dissimilarity NC_022098.1.bintree  NC_022098.1.bintree
 ```
 
-To directly compute vlmcs and their dissimilarities from a directory of vlmcs:
+To directly compute vlmcs and their dissimilarities from a directory of fasta files:
 
 ```shell
 dvstar dissimilarity-fasta  directory-with-multiple-fastas output-path
