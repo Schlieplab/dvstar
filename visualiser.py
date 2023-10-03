@@ -31,7 +31,6 @@ class Node:
 
 
 def _parse_node(line):
-    print(line)
     (n, count, a, c, g, t, _, _, _) = line.split(" ")
 
     count = int(count)
@@ -56,7 +55,7 @@ def _get_contexts(path: Path, executable: Path = None):
     if path.suffix == ".bintree":
         executable = _find_dvstar(executable)
 
-        args = (executable, "--mode", "dump", "--in-path", path)
+        args = (executable, "dump", path)
         r = subprocess.run(args, capture_output=True, text=True)
         input_contexts = r.stdout.splitlines()
 
