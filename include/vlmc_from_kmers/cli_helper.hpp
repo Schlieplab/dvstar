@@ -151,9 +151,9 @@ void add_shared_build_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_build_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("-p,--fasta-path", arguments.fasta_path, "Path to fasta file.")
+  app.add_option("fasta-path", arguments.fasta_path, "Path to fasta file.")
       ->required();
-  app.add_option("-o,--out-path", arguments.out_path,
+  app.add_option("out-path", arguments.out_path,
                  "Path to output .bintree file. Will add .bintree as extension "
                  "to the file if missing.")
       ->required();
@@ -162,11 +162,11 @@ void add_build_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_build_from_kmc_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("-p,--in-path", arguments.in_path,
+  app.add_option("in-path", arguments.in_path,
                  "Path to kmc db file. The path to the kmc db file needs to be "
                  "supplied without the file extension")
       ->required();
-  app.add_option("-o,--out-path", arguments.out_path,
+  app.add_option("out-path", arguments.out_path,
                  "Path to output .bintree file. Will add .bintree as extension "
                  "to the file if missing.")
       ->required();
@@ -175,22 +175,22 @@ void add_build_from_kmc_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_dump_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("-p,--in-path", arguments.in_path,
+  app.add_option("in-path", arguments.in_path,
                  "Path to a .bintree file (the output from `build`).")
       ->required();
 
   app.add_option(
-      "-o,--out-path", arguments.out_path,
+      "out-path", arguments.out_path,
       "Path to output text file. Will write to stdout if not provided.");
 }
 
 void add_score_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("--in-path", arguments.in_path,
+  app.add_option("in-path", arguments.in_path,
                  "Path to a .bintree file (the output from `build`) or a "
                  "directory of .bintree files.")
       ->required();
 
-  app.add_option("--fasta-path", arguments.fasta_path,
+  app.add_option("fasta-path", arguments.fasta_path,
                  "Path to either a fasta file or a directory of fasta files.")
       ->required();
 
@@ -204,8 +204,13 @@ void add_score_options(CLI::App &app, cli_arguments &arguments) {
 void add_bic_options(CLI::App &app, cli_arguments &arguments) {
   add_memory_model_options(app, arguments);
 
-  app.add_option("-p,--fasta-path", arguments.fasta_path,
+  app.add_option("fasta-path", arguments.fasta_path,
                  "Path to fasta file to build VLMC for.")
+      ->required();
+
+  app.add_option("out-path", arguments.out_path,
+                 "The .bintree file is written to this location during "
+                 "computation of the BIC.")
       ->required();
 
   app.add_option("-d,--max-max-depth", arguments.max_depth,
@@ -215,11 +220,6 @@ void add_bic_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option("-t,--min-min-count", arguments.min_count,
                  "The smallest min count to try. Smaller min counts increase "
                  "the computation time. Defaults to 2.");
-
-  app.add_option("-o,--out-path", arguments.out_path,
-                 "The .bintree file is written to this location during "
-                 "computation of the BIC.")
-      ->required();
 
   add_pseudo_count_option(app, arguments);
 }
@@ -282,12 +282,12 @@ void add_shared_distance_options(CLI::App &app, cli_arguments &arguments) {
 
 void add_distance_options(CLI::App &app, cli_arguments &arguments) {
   app.add_option(
-         "--in-path", arguments.in_path,
+         "in-path", arguments.in_path,
          "Path to a saved .bintree file or directory of .bintree files.")
       ->required();
 
   app.add_option(
-      "--to-path", arguments.to_path,
+      "to-path", arguments.to_path,
       "Path to a saved .bintree file or directory of .bintree files. "
       "If empty, the distances are "
       "computed between the files in the --in-path.");
@@ -298,11 +298,11 @@ void add_distance_options(CLI::App &app, cli_arguments &arguments) {
 
 void add_distance_fasta_options(CLI::App &app, cli_arguments &arguments) {
 
-  app.add_option("--fasta-path", arguments.fasta_path,
+  app.add_option("fasta-path", arguments.fasta_path,
                  "Path to a fasta file or directory of fasta files.")
       ->required();
 
-  app.add_option("--to-path", arguments.to_path,
+  app.add_option("to-path", arguments.to_path,
                  "Path to a fasta file or directory of fasta files. "
                  "If empty, the distances are "
                  "computed between the files in the --in-path.");
@@ -323,11 +323,11 @@ void add_distance_fasta_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_reprune_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("--in-path", arguments.in_path,
+  app.add_option("in-path", arguments.in_path,
                  "Path to a previously computed .bintree file.")
       ->required();
 
-  app.add_option("-o,--out-path", arguments.out_path,
+  app.add_option("out-path", arguments.out_path,
                  "Path to output .bintree file.");
 
   add_memory_model_options(app, arguments);
@@ -339,7 +339,7 @@ void add_reprune_options(CLI::App &app, cli_arguments &arguments) {
 }
 
 void add_size_options(CLI::App &app, cli_arguments &arguments) {
-  app.add_option("--in-path", arguments.in_path,
+  app.add_option("in-path,--in-path", arguments.in_path,
                  "Path to a previously computed .bintree file.")
       ->required();
 }
