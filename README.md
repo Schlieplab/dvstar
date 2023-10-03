@@ -61,59 +61,47 @@ Both `kmc` and `kmc_tools` are required. [Both are available on their github rel
 This provides an executable `dvstar`, which can be used as follows:
 
 ```shell
-% ./dvstar --help
+% dvstar --help
 Construction and comparisons of variable-length Markov chains with the aid of a k-mer counter.
-Usage: ./dvstar [OPTIONS]
+Usage: dvstar [OPTIONS] SUBCOMMAND
 
 Options:
   -h,--help                   Print this help message and exit
-  -m,--mode ENUM:value in {bic->3,build->0,build-from-kmc-db->4,dissimilarity->5,dump->2,reprune->6,score->1} OR {3,0,4,5,2,6,1}
-                              Program mode, 'build', 'build-from-kmc-db', 'dump', 'score', 'reprune', or 'dissimilarity'.  For build-from-kmc-db, the kmc db needs to include all k-mers (not in canonical form), with no minimum count cutoff.  The length of the k-mers needs to be set to 1 more than the maximum depth of the VLMC.  The kmc db also has to be sorted.
-  --dissimilarity ENUM:value in {dvstar->0,penalized-dvstar->1} OR {0,1}
-                              Dissimilarity type, either 'dvstar',  or 'penalized-dvstar'.
-  --estimator ENUM:value in {kullback-leibler->0,peres-shields->1} OR {0,1}
-                              Estimator for the pruning of the VLMC, either 'kullback-leibler',  or 'peres-shields'.
-  -p,--fasta-path TEXT        Path to fasta file.  Required for 'build' and 'score' modes.
-  --in-path TEXT              Path to saved tree file or kmc db file.  Required for 'build-from-kmc-db', 'dump', 'score', and 'dissimilarity' modes.  For 'build-from-kmc-db', the kmc db file needs to be supplied without the file extension.
-  --to-path TEXT              Path to saved tree file.  Required for 'dissimilarity' mode.
-  -o,--out-path TEXT          Path to output file.  The VLMCs are stored as binary, and can be read by the 'dump' or 'score' modes.  Required for 'build' and 'dump' modes.
-  -t,--temp-path TEXT         Path to temporary folder for the external memory algorithms.  For good performance, this needs to be on a local machine.  For sorting, at least 2GB will be allocated to this path.  Defaults to ./tmp
-  -c,--min-count INT          Minimum count required for every k-mer in the tree.
-  -k,--threshold FLOAT        Kullback-Leibler threshold.
-  -d,--max-depth INT          Maximum depth/length for included k-mers.
-  -a,--pseudo-count-amount FLOAT
-                              Size of pseudo count for probability estimation. See e.g. https://en.wikipedia.org/wiki/Additive_smoothing .
-  -i,--in-or-out-of-core ENUM:value in {external->0,internal->1,hash->2} OR {0,1,2}
-                              Specify 'internal' for in-core or 'external' for out-of-core memory model.  Out of core is slower, but is not memory bound.
-  --adjust-for-sequencing-errors
-                              Give this flag to adjust the estimator parameters and min counts for the sequencing depth and error rates of a sequencing dataset. See --sequencing-depth and --sequencing-error-rate for parameters.
-  --sequencing-depth FLOAT    If --adjust-for-sequencing-errors is given, this parameter is used to alter the estimator parameters to reflect that many k-mers will be --sequencing-depth times more frequent.
-  --sequencing-error-rate FLOAT
-                              If --adjust-for-sequencing-errors is given, this parameter is used to alter to estimate the number of k-mers that will be missing due to sequencing errors.
+
+Subcommands:
+  build                       Constructs a single VLMC from the provided fasta file.
+  build-from-kmc-db           Constructs a single VLMC from the provided kmc db.
+  dump                        Dumps the contents of a .bintree file to raw text, either to a .txt file or stdout.
+  score                       Computes the negative log-likelihood of a collection of fasta files for VLMCs.
+  bic                         Runs BIC and AIC to give insight into parameter choice of the VLMC for the given fasta file.
+  dissimilarity               Computes the dissimilarity between a collection of VLMCs.
+  dissimilarity-fasta         Computes VLMCs from the fasta files and the dissimilarity between the resulting VLMCs.
+  reprune                     Runs the pruning steps of the VLMC construction to make a given VLMC more general.
+  size                        Prints the size of the VLMC. The size is determined by the sum of the length of all (terminal) k-mers in the VLMCs. A k-mer is considered terminal if any branch ends with the k-mer, meaning there is no more specific k-mer in the VLMC.
 ```
 
 For example, to construct a VLMC, run:
 
 ```shell
-./dvstar --fasta-path NC_022098.1.fasta --threshold 3.9075 --max-depth 4 --min-count 100 --out-path NC_022098.1.bintree --temp-path tmp
+dvstar build --threshold 3.9075 --max-depth 4 --min-count 100 --temp-path tmp NC_022098.1.fasta NC_022098.1.bintree
 ```
 
 To view the contents of the VLMC, run:
 
 ```shell
-./dvstar --mode dump --in-path NC_022098.1.bintree
+dvstar dump NC_022098.1.bintree
 ```
 
 To compute the dvstar similarity between two VLMCs:
 
 ```shell
-./dvstar --mode dissimilarity --dissimilarity dvstar --in-path NC_022098.1.bintree --to-path NC_022098.1.bintree
+dvstar dissimilarity NC_022098.1.bintree  NC_022098.1.bintree
 ```
 
 To directly compute vlmcs and their dissimilarities from a directory of vlmcs:
 
 ```shell
-./dvstar --mode dissimilarity-fasta --fasta-path directory-with-multiple-fastas --out-path output-path
+dvstar dissimilarity-fasta  directory-with-multiple-fastas output-path
 ```
 
 The output of this is distances in the phylip-format, which can then be provided to phylogenetic tools to construct trees (e.g., [`RapidNJ`](https://github.com/somme89/rapidNJ) or [`decentree`](https://github.com/iqtree/decenttree)).
@@ -122,7 +110,7 @@ To build a VLMC directly from a KMC db, ensure that the kmc parameters `-ci1` an
 are used. Also ensure that the `-k` parameter is set to 1 larger than the max depth parameter given to `dvstar`.
 
 ```shell
-./dvstar --mode build-from-kmc-db --in-path kmc_db --out-path kmc_db.bintree --max-depth 4 --min-count 100
+dvstar build-from-kmc-db --max-depth 4 --min-count 100 kmc_db kmc_db.bintree
 ```
 
 This approach also allows you to add new sequences/reads to an existing kmc db and then rerun the vlmc construction.
