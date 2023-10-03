@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <queue>
 #include <thread>
 
 #include "cluster_container.hpp"
@@ -15,22 +16,30 @@ void matrix_recursion(
     size_t start_index_left, size_t stop_index_left, size_t start_index_right,
     size_t stop_index_right,
     const std::function<void(size_t &left, size_t &right)> &fun) {
-  auto diff_left = stop_index_left - start_index_left;
-  auto diff_right = stop_index_right - start_index_right;
-  if (diff_left == 1 && diff_right == 1) {
-    fun(start_index_left, start_index_right);
-  } else if (diff_right > diff_left) {
-    auto new_right_index = (stop_index_right + start_index_right) / 2;
-    matrix_recursion(start_index_left, stop_index_left, start_index_right,
-                     new_right_index, fun);
-    matrix_recursion(start_index_left, stop_index_left, new_right_index,
-                     stop_index_right, fun);
-  } else {
-    auto new_left_index = (stop_index_left + start_index_left) / 2;
-    matrix_recursion(start_index_left, new_left_index, start_index_right,
-                     stop_index_right, fun);
-    matrix_recursion(new_left_index, stop_index_left, start_index_right,
-                     stop_index_right, fun);
+
+  std::queue<std::tuple<size_t, size_t, size_t, size_t>> queue{};
+  queue.push(
+      {start_index_left, stop_index_left, start_index_right, stop_index_right});
+
+  while (!queue.empty()) {
+    auto [start_left, stop_left, start_right, stop_right] = queue.front();
+    auto diff_left = stop_left - start_left;
+    auto diff_right = stop_right - start_right;
+
+    if (diff_left == 1 && diff_right == 1) {
+      fun(start_left, start_right);
+
+    } else if (diff_right > diff_left) {
+      auto new_right = (stop_right + start_right) / 2;
+      queue.push({start_left, stop_left, start_right, new_right});
+      queue.push({start_left, stop_left, new_right, stop_right});
+    } else {
+      auto new_left = (stop_left + start_left) / 2;
+      queue.push({start_left, new_left, start_right, stop_right});
+      queue.push({new_left, stop_left, start_right, stop_right});
+    }
+
+    queue.pop();
   }
 }
 
@@ -70,15 +79,13 @@ int sign(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y) {
 
 bool is_point_in_triangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y,
                           int v3x, int v3y) {
-  int d1, d2, d3;
-  bool has_neg, has_pos;
 
-  d1 = sign(ptx, pty, v1x, v1y, v2x, v2y);
-  d2 = sign(ptx, pty, v2x, v2y, v3x, v3y);
-  d3 = sign(ptx, pty, v3x, v3y, v1x, v1y);
+  int d1 = sign(ptx, pty, v1x, v1y, v2x, v2y);
+  int d2 = sign(ptx, pty, v2x, v2y, v3x, v3y);
+  int d3 = sign(ptx, pty, v3x, v3y, v1x, v1y);
 
-  has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-  has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+  bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+  bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
   return !(has_neg && has_pos);
 }

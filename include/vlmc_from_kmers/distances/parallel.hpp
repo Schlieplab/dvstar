@@ -29,72 +29,38 @@ get_x_bounds(size_t size, const size_t requested_cores) {
   return bounds_per_thread;
 }
 
-void recursive_get_triangle_coords(
-    std::vector<std::array<int, 6>> &triangle_coords, int x1, int y1, int x2,
-    int y2, int x3, int y3, const int remaining_cores) {
-  if (remaining_cores == 1) {
-    triangle_coords.push_back({x1, y1, x2, y2, x3, y3});
-    return;
-  }
-  auto one_to_three = x1 == x3 || y1 == y3;
-  auto two_to_three = x2 == x3 || y2 == y3;
-  auto one_to_two = x1 == x2 || y1 == y2;
-
-  if (two_to_three && one_to_two) {
-    auto new_x = (x3 + x1 + 1) / 2;
-    auto new_y = (y3 + y1 + 1) / 2;
-    if (remaining_cores <= 2) {
-      triangle_coords.push_back({x1, y1, x2, y2, new_x, new_y});
-      triangle_coords.push_back({new_x, new_y, x2, y2, x3, y3});
-    } else {
-      auto cores = remaining_cores - (remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, x1, y1, x2, y2, new_x,
-                                    new_y, remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, new_x, new_y, x2, y2, x3,
-                                    y3, cores);
-    }
-  } else if ((two_to_three && not one_to_three) ||
-             (one_to_three && one_to_two)) {
-    auto new_x = (x3 + x2 + 1) / 2;
-    auto new_y = (y3 + y2 + 1) / 2;
-    if (remaining_cores <= 2) {
-      triangle_coords.push_back({x1, y1, x2, y2, new_x, new_y});
-      triangle_coords.push_back({x1, y1, new_x, new_y, x3, y3});
-    } else {
-      auto cores = remaining_cores - (remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, x1, y1, x2, y2, new_x,
-                                    new_y, remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, x1, y1, new_x, new_y, x3,
-                                    y3, cores);
-    }
-  } else {
-    auto new_x = (x2 + x1 + 1) / 2;
-    auto new_y = (y2 + y1 + 1) / 2;
-    if (remaining_cores <= 2) {
-      triangle_coords.push_back({x1, y1, new_x, new_y, x3, y3});
-      triangle_coords.push_back({new_x, new_y, x2, y2, x3, y3});
-    } else {
-      auto cores = remaining_cores - (remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, x1, y1, new_x, new_y, x3,
-                                    y3, remaining_cores / 2);
-      recursive_get_triangle_coords(triangle_coords, new_x, new_y, x2, y2, x3,
-                                    y3, cores);
-    }
-  }
-}
-
-void parallelize_triangle(
-    size_t size, const std::function<void(int, int, int, int, int, int)> &fun,
+void parallelize_isocles_triangle(
+    size_t size, const std::function<void(size_t, size_t, size_t)> &fun,
     const size_t requested_cores) {
   std::vector<std::thread> threads{};
-  std::vector<std::array<int, 6>> triangle_coords;
-  size_t used_cores = utils::get_used_cores(requested_cores, size);
-  recursive_get_triangle_coords(triangle_coords, 0, 0, 0, size, size, size,
-                                used_cores);
 
-  for (auto &coords : triangle_coords) {
-    threads.emplace_back(fun, coords[0], coords[1], coords[2], coords[3],
-                         coords[4], coords[5]);
+  int used_cores =
+      static_cast<int>(utils::get_used_cores(requested_cores, size));
+
+  std::vector<size_t> triangle_coords(used_cores);
+
+  double triangle_area = double(size) * double(size) / 2.0;
+  double area_per_thread = triangle_area / double(used_cores);
+
+  // The computation of the triangle is divided into #threads amount of ~equal
+  // area (rounded to whole integers). The idea is that the triangle is divided
+  // into a top triangle and then stacked trapezoids.
+
+  triangle_coords[0] = std::round(std::sqrt(2 * area_per_thread));
+
+  for (int i = 1; i < used_cores - 1; i++) {
+    triangle_coords[i] = std::round(std::sqrt(
+        2 * (area_per_thread + std::pow(triangle_coords[i - 1], 2.0) / 2)));
+  }
+  triangle_coords[triangle_coords.size() - 1] = size;
+
+  for (int i = 0; i < triangle_coords.size(); i++) {
+    if (i == 0) {
+      threads.emplace_back(fun, 0, triangle_coords[i], size);
+    } else {
+      threads.emplace_back(fun, triangle_coords[i - 1], triangle_coords[i],
+                           size);
+    }
   }
 
   for (auto &thread : threads) {
