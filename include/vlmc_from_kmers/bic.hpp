@@ -102,21 +102,24 @@ std::tuple<int, int, double> find_best_parameters_bic(
 
         auto nll_start = std::chrono::steady_clock::now();
 
-        double negative_log_likelihood =
-            vlmc::details::negative_log_likelihood_from_kmc_db(
-                fasta_path, tmp_path, tree_path, in_or_out_of_core, max_depth,
-                kmc_db_path);
+        auto [_ident, nlls] = vlmc::negative_log_likelihood(
+            fasta_path, tree_path, in_or_out_of_core);
         auto nll_done = std::chrono::steady_clock::now();
+
+        double negative_log_likelihood = 0;
+        for (auto &nll : nlls) {
+          negative_log_likelihood += nll;
+        }
 
         std::chrono::duration<double> kmc_seconds = nll_done - nll_start;
         std::cout << "NLL time: " << kmc_seconds.count() << "s\n";
 
-        double log_likelihood = -negative_log_likelihood * sequence_size;
+        double log_likelihood = -negative_log_likelihood * double(sequence_size);
 
         uint64 n_parameters = 3 * n_terminal;
 
         double bic_score =
-            n_parameters * std::log(sequence_size) - 2 * log_likelihood;
+            double(n_parameters) * std::log(sequence_size) - 2 * log_likelihood;
 
         if (bic_score < best_result.bic_score) {
           best_result = Result{min_count, max_depth,      threshold,
