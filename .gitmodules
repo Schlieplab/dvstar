@@ -13,3 +13,6 @@
 [submodule "robin-hood-hashing"]
 	path = submodules/robin-hood-hashing
 	url = https://github.com/martinus/robin-hood-hashing.git
+[submodule "phylogenetic-benchmarks/read-data-vlmc"]
+	path = phylogenetic-benchmarks/read-data-vlmc
+	url = https://gitlab.com/genomic-signatures/read-data-vlmc.git
