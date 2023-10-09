@@ -7,6 +7,7 @@
 #include "vlmc_from_kmers/distances/global_aliases.hpp"
 #include "vlmc_from_kmers/distances/utils.hpp"
 
+
 void output_square_format(std::ostream &stream, const matrix_t &distance_matrix,
                           const std::vector<std::string> &ids_from,
                           const std::vector<std::string> &ids_to) {
@@ -41,6 +42,7 @@ void output_distances(const vlmc::cli_arguments &arguments,
                       const matrix_t &distance_matrix,
                       const std::vector<std::string> &ids_from,
                       const std::vector<std::string> &ids_to) {
+  auto out_path = arguments.out_path;
   auto format = arguments.distances_output_format;
   if (arguments.out_path.extension() == ".h5" ||
       arguments.out_path.extension() == ".hdf5") {
@@ -51,6 +53,12 @@ void output_distances(const vlmc::cli_arguments &arguments,
     std::cerr << "Need to provide path in '--out-path' to write hdf5 files. "
                  "Will output to stdout in square format instead.";
     format = vlmc::DistancesFormat::square;
+  }
+
+  if (format == vlmc::DistancesFormat::hdf5 &&
+      arguments.out_path.extension() != ".h5" &&
+      arguments.out_path.extension() != ".hdf5") {
+    out_path.replace_extension(".h5");
   }
 
   if (format == vlmc::DistancesFormat::hdf5) {
@@ -71,7 +79,6 @@ void output_distances(const vlmc::cli_arguments &arguments,
       output_square_format(std::cout, distance_matrix, ids_from, ids_to);
     }
   } else {
-    auto out_path = arguments.out_path;
     if (std::filesystem::is_directory(out_path)) {
       out_path = out_path / "distances.dist";
     }
@@ -188,42 +195,21 @@ int compute_dissimilarity(vlmc::cli_arguments &arguments) {
   return EXIT_SUCCESS;
 }
 
-int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
-  if (arguments.fasta_path.empty()) {
-    std::cerr << "Error: A --fasta-path needs to be provided." << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (arguments.cache_path.empty()) {
-    std::cerr << "Error: An --cache-path needs to be provided." << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  auto fasta_paths = vlmc::get_recursive_paths(
-      arguments.fasta_path, {".fasta", ".fa", ".fna", ".gz"});
-
-  auto bintree_path = arguments.cache_path;
-
-  bool tmp_path_existed_before = std::filesystem::exists(arguments.tmp_path);
-
-  vlmc::configure_stxxl(arguments.tmp_path);
-
-  auto start_building = std::chrono::steady_clock::now();
-
-  auto n_threads =
-      vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
-
-  std::clog << "Computing signatures" << std::endl;
-
+void create_vlmcs_in_parallel(
+    const vlmc::cli_arguments &arguments,
+    const std::filesystem::path &bintree_path, int n_threads,
+    const std::vector<std::filesystem::path> &fasta_paths) {
   vlmc::parallel::parallelize(
       fasta_paths.size(),
       [&](size_t start_index, size_t stop_index) {
         for (size_t i = start_index; i < stop_index; i++) {
-          auto fasta_path = fasta_paths[i];
+          const auto& fasta_path = fasta_paths[i];
           auto out_path = bintree_path / fasta_path.stem();
           out_path.replace_extension(".bintree");
 
           if (!std::filesystem::exists(fasta_path)) {
-            std::cerr << i << ", " << start_index << ", " << stop_index << std::endl;
+            std::cerr << i << ", " << start_index << ", " << stop_index
+                      << std::endl;
             std::cerr << fasta_path.string() << " is not a file" << std::endl;
             continue;
           }
@@ -243,6 +229,49 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
         return EXIT_SUCCESS;
       },
       n_threads);
+}
+
+int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
+  if (arguments.fasta_path.empty()) {
+    std::cerr << "Error: A --fasta-path needs to be provided." << std::endl;
+    return EXIT_FAILURE;
+  }
+  if (arguments.cache_path.empty()) {
+    std::cerr << "Error: An --cache-path needs to be provided." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  auto fasta_paths = vlmc::get_recursive_paths(
+      arguments.fasta_path, {".fasta", ".fa", ".fna", ".gz"});
+
+  auto bintree_path = arguments.cache_path;
+  auto bintree_to_path = bintree_path / "to";
+
+  if (!arguments.to_path.empty()) {
+    bintree_path = bintree_path / "from";
+  }
+
+  std::filesystem::create_directories(bintree_path);
+
+  bool tmp_path_existed_before = std::filesystem::exists(arguments.tmp_path);
+
+  vlmc::configure_stxxl(arguments.tmp_path);
+
+  auto start_building = std::chrono::steady_clock::now();
+
+  auto n_threads =
+      vlmc::parse_degree_of_parallelism(arguments.degree_of_parallelism);
+
+  std::clog << "Computing signatures" << std::endl;
+
+  create_vlmcs_in_parallel(arguments, bintree_path, n_threads, fasta_paths);
+
+  if (!arguments.to_path.empty()) {
+    std::filesystem::create_directories(bintree_to_path);
+    auto fasta_to_paths = vlmc::get_recursive_paths(
+        arguments.to_path, {".fasta", ".fa", ".fna", ".gz"});
+    create_vlmcs_in_parallel(arguments, bintree_to_path, n_threads, fasta_to_paths);
+  }
 
   auto done_building = std::chrono::steady_clock::now();
   std::chrono::duration<double> building_duration =
@@ -252,17 +281,31 @@ int compute_dissimilarity_fasta(vlmc::cli_arguments &arguments) {
 
   auto start_distances = std::chrono::steady_clock::now();
 
-  auto [distance_matrix, ids_from, ids_to] =
-      calculate_cluster_distance<vlmc::container::SortedSearch>(
-          bintree_path, arguments.pseudo_count_amount,
-          arguments.background_order, n_threads);
+  if (arguments.to_path.empty()) {
+    auto [distance_matrix, ids_from, ids_to] =
+        calculate_cluster_distance<vlmc::container::SortedSearch>(
+            bintree_path, arguments.pseudo_count_amount,
+            arguments.background_order, n_threads);
 
-  auto done_distances = std::chrono::steady_clock::now();
-  std::chrono::duration<double> distances_duration =
-      done_distances - start_distances;
-  std::clog << "VLMC distances time: " << distances_duration.count() << "s\n";
+    auto done_distances = std::chrono::steady_clock::now();
+    std::chrono::duration<double> distances_duration =
+        done_distances - start_distances;
+    std::clog << "VLMC distances time: " << distances_duration.count() << "s\n";
 
-  output_distances(arguments, distance_matrix, ids_from, ids_to);
+    output_distances(arguments, distance_matrix, ids_from, ids_to);
+  } else {
+    auto [distance_matrix, ids_from, ids_to] =
+        calculate_cluster_distance<vlmc::container::SortedSearch>(
+            bintree_path, bintree_to_path, arguments.pseudo_count_amount,
+            arguments.background_order, n_threads);
+
+    auto done_distances = std::chrono::steady_clock::now();
+    std::chrono::duration<double> distances_duration =
+        done_distances - start_distances;
+    std::clog << "VLMC distances time: " << distances_duration.count() << "s\n";
+
+    output_distances(arguments, distance_matrix, ids_from, ids_to);
+  }
 
   if (!tmp_path_existed_before) {
     std::filesystem::remove_all(arguments.tmp_path);
