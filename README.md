@@ -32,19 +32,35 @@ sudo apptainer build vlmc-from-kmers.sif vlmc-from-kmers.def
 
 ### Manually
 
+#### Dependencies:
+
+* intel TBB (`tbb` in brew, `libtbb-dev` on debian).
+* boost iostreams (`boost` in brew, `libboost-dev` on debian).
+* hdf5 (`hdf5` in brew, `libhdf5-dev` on debian).
+* eigen3 (`eigen` in brew, `libeigen3-dev` on debian).
+* cmake (`cmake` in brew, `cmake` on debian).
+
+#### Build
 Create a build directory, configure with cmake and build:
 
 ```shell script
-mkdir build
-cd build
-cmake -D CMAKE_BUILD_TYPE=Release ..
-make
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build
+```
+
+#### Build On MacOS
+You may need to install a different c++ compiler than the one apple provides. This can, for example, be done through [brew](https://brew.sh/) or [MacPorts](https://www.macports.org/). This is tested with gcc (version 13) so that would be my recommendation. You may also need to provide the path to the installed compiler in the cmake command, e.g.:
+
+```shell script
+CC=/opt/homebrew/bin/gcc-13 CXX=/opt/homebrew/bin/g++-13 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build
 ```
 
 __Note that kmc3 needs to be installed separately, and be in the current working directory, or in your path.__
-Both `kmc` and `kmc_tools` are required.
+Both `kmc` and `kmc_tools` are required. [Both are available on their github releases page](https://github.com/refresh-bio/KMC/releases).
 
 This provides an executable `dvstar`, which can be used as follows:
+
 
 ```shell
 % ./dvstar --help
