@@ -30,7 +30,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/stxxl)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
 
 # Parallelization
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltbb -fopenmp -fpermissive")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -fpermissive")
 
 # CLI11 for command line interface
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/CLI11)
@@ -48,7 +48,7 @@ if(NOT MAIN_PROJECT)
 endif()
 
 
-set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} tbb kmc_file kmer_api mmer CLI11::CLI11)
+set(CountVLMC_LIBRARIES ${STXXL_LIBRARIES} TBB::tbb kmc_file kmer_api mmer CLI11::CLI11)
 
 add_library(CountVLMC INTERFACE)
 add_library(CountVLMC::CountVLMC ALIAS CountVLMC)
