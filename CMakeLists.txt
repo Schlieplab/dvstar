@@ -68,3 +68,5 @@ if(MAIN_PROJECT)
         add_subdirectory(tests)
     endif()
 endif()
+
+install(TARGETS CountVLMC)
