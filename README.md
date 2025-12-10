@@ -1,8 +1,8 @@
-# Building and comparing a variable-length Markov chain from k-mers
+# Fast construction of variable-length Markov chains (VLMC) from k-mers
 
 This repository contains the code for constructing a variable-length Markov chain (VLMC) from a lexicographically
-sorted list of _k_-mers. This enables VLMCs to be constructed on even very large genomes, as well as collections
-of sequences.
+sorted list of _k_-mers. This enables VLMCs to be constructed very efficiently even for very large genomes, as well as collections
+of sequencing data.
 
 This repository deals mainly with the task of constructing the VLMC, for scoring of sequences, or most dissimilarities
 between
@@ -13,32 +13,47 @@ accepts the output form this progam.
 
 Publication pending...
 
-## Compilation
-
-To compile the program, please first download all submodules:
-
-```shell script
-git submodule update --init --recursive
-```
+## Installation
 
 ### Container solution / apptainer (previously singularity)
 
-We provide an [apptainer container](https://apptainer.org/). The definition file needs to be modified to
-include the path to kmc, see the fifth and sixth line. The container is built by running:
+We provide an [apptainer container](https://apptainer.org/). The definition file `vlmc-from-kmers.def` needs to be modified to
+use the correct path to kmc, see the fifth and sixth line, specifically
+```shell script
+    ../kmc/KMC3.linux/kmc /kmc/kmc
+    ../kmc/KMC3.linux/kmc_tools /kmc/kmc_tools
+```
+
+The container is built by running:
 
 ```shell script
 sudo apptainer build vlmc-from-kmers.sif vlmc-from-kmers.def
 ```
 
-### Manually
+### Compiling from Source (recommended)
 
-#### Dependencies:
+To compile the program, please first download all dependencies. 
 
+#### Installing Dependencies as 
+
+E.submodules 
+
+```shell script
+git submodule update --init --recursive
+```
+or alternatively install the following dependendencies manually on your Linux, Unix, or MacOS system, 
+
+#### Installing Dependencies using a package manager
 * intel TBB (`tbb` in brew, `libtbb-dev` on debian).
 * boost iostreams (`boost` in brew, `libboost-dev` on debian).
 * hdf5 (`hdf5` in brew, `libhdf5-dev` on debian).
 * eigen3 (`eigen` in brew, `libeigen3-dev` on debian).
 * cmake (`cmake` in brew, `cmake` on debian).
+
+E.g. on a Linux system with package manager apt (after updating apt and build-essential)
+```shell script
+sudo apt install libtbb-dev libboost-dev libhdf5-dev libeigen3-dev cmake
+```
 
 #### Build
 Create a build directory, configure with cmake and build:
