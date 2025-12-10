@@ -15,9 +15,13 @@ Publication pending...
 
 ## Installation
 
+### Installing KMC3
+__Note that KMC3 needs to be installed separately, and both executables `kmc` and `kmc_tools` are required to be in the current working directory, or in your path.__ [`kmc` and `kmc_tools are available on their github releases page of the KMC github](https://github.com/refresh-bio/KMC/releases).
+
+
 ### Container solution / apptainer (previously singularity)
 
-We provide an [apptainer container](https://apptainer.org/). The definition file `vlmc-from-kmers.def` needs to be modified to
+We provide an [apptainer container](https://apptainer.org/). After downloading the `vlmc-from-kmers.sif` `vlmc-from-kmers.def`, the definition file `vlmc-from-kmers.def` needs to be modified to
 use the correct path to kmc, see the fifth and sixth line, specifically
 ```shell script
     ../kmc/KMC3.linux/kmc /kmc/kmc
@@ -32,27 +36,31 @@ sudo apptainer build vlmc-from-kmers.sif vlmc-from-kmers.def
 
 ### Compiling from Source (recommended)
 
-To compile the program, please first download all dependencies. 
+To compile the program, please first make sure that in addition to KMC3 the following dependencies are installed.
 
-#### Installing Dependencies as 
-
-E.submodules 
-
-```shell script
-git submodule update --init --recursive
-```
-or alternatively install the following dependendencies manually on your Linux, Unix, or MacOS system, 
-
-#### Installing Dependencies using a package manager
-* intel TBB (`tbb` in brew, `libtbb-dev` on debian).
-* boost iostreams (`boost` in brew, `libboost-dev` on debian).
+#### Dependencies of dvstar 
+* Intel TBB (`tbb` in brew, `libtbb-dev` on debian).
+* Boost iostreams (`boost` in brew, `libboost-dev` on debian).
 * hdf5 (`hdf5` in brew, `libhdf5-dev` on debian).
 * eigen3 (`eigen` in brew, `libeigen3-dev` on debian).
 * cmake (`cmake` in brew, `cmake` on debian).
 
-E.g. on a Linux system with package manager apt (after updating apt and build-essential)
+This can be accomplished on a Linux system with package manager `apt` with the command  
 ```shell script
 sudo apt install libtbb-dev libboost-dev libhdf5-dev libeigen3-dev cmake
+```
+Make sure that `apt` and your build tools are up-to-date, e.g. by
+```shell script
+sudo apt update
+sudo apt install build-essential
+```
+
+#### Clone the dvstar repository including submodules
+
+```shell script
+git clone https://github.com/Schlieplab/dvstar.git
+cd dvstar
+git submodule update --init --recursive
 ```
 
 #### Build
@@ -63,19 +71,24 @@ cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build
 ```
 
+Install dvstar to you prefered location by using 
+```shell script
+sudo cp build/dvstar /usr/local/bin/
+sudo chmod +x /usr/local/bin/dvstar
+```
+
+
 #### Build On MacOS
-You may need to install a different c++ compiler than the one apple provides. This can, for example, be done through [brew](https://brew.sh/) or [MacPorts](https://www.macports.org/). This is tested with gcc (version 13) so that would be my recommendation. You may also need to provide the path to the installed compiler in the cmake command, e.g.:
+You may need to install a different c++ compiler than the one Apple provides. This can, for example, be done through [brew](https://brew.sh/) or [MacPorts](https://www.macports.org/). This is tested with gcc (version 13) so that would be my recommendation. You may also need to provide the path to the installed compiler in the cmake command, e.g.:
 
 ```shell script
 CC=/opt/homebrew/bin/gcc-13 CXX=/opt/homebrew/bin/g++-13 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build
 ```
 
-__Note that kmc3 needs to be installed separately, and be in the current working directory, or in your path.__
-Both `kmc` and `kmc_tools` are required. [Both are available on their github releases page](https://github.com/refresh-bio/KMC/releases).
 
-This provides an executable `dvstar`, which can be used as follows:
-
+# Running dvstar
+After successful compilation you can run the dvstar executable.
 
 ```shell
 % ./dvstar --help
