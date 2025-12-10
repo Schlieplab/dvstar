@@ -34,6 +34,10 @@ The container is built by running:
 sudo apptainer build vlmc-from-kmers.sif vlmc-from-kmers.def
 ```
 
+### Using Spack 
+We provide an initial `package.py` to be used with the Spack package manager. Activate the separately installed KMC3 package (and possibly other packages
+from the dependencies below)
+
 ### Compiling from Source (recommended)
 
 To compile the program, please first make sure that in addition to KMC3 the following dependencies are installed.
