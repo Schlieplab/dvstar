@@ -16,7 +16,7 @@ Publication pending...
 ## Installation
 
 ### Installing KMC3
-__Note that KMC3 needs to be installed separately, and both executables `kmc` and `kmc_tools` are required to be in the current working directory, or in your path.__ [`kmc` and `kmc_tools are available on their github releases page of the KMC github](https://github.com/refresh-bio/KMC/releases).
+__Note that KMC3 needs to be installed separately, and both executables `kmc` and `kmc_tools` are required to be in the current working directory, or in your path.__ [`kmc` and `kmc_tools` are available on their github releases page of the KMC github](https://github.com/refresh-bio/KMC/releases).
 
 
 ### Container solution / apptainer (previously singularity)
